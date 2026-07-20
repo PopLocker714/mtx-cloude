@@ -9,9 +9,10 @@ if (!secret || secret.length < 32) {
   throw new Error("BETTER_AUTH_SECRET must be set and be >= 32 chars (openssl rand -hex 32)");
 }
 
-// Домен для кросс-сабдоменной куки (app. ↔ api.). Напр. ".tunnel.poploker.ru".
-const cookieDomain = process.env.COOKIE_DOMAIN; // необязателен для локалки
-const isProd = process.env.NODE_ENV === "production" || !!cookieDomain;
+// Кука — host-only на API-домене (без атрибута Domain). Клиент всегда ходит на api.<домен>,
+// поэтому SameSite=None; Secure достаточно для работы между app. и api. — а Domain-атрибут
+// на общих tunnel-доменах (Public Suffix List) браузер отвергает. Так что crossSubDomainCookies НЕ используем.
+const isProd = process.env.NODE_ENV === "production";
 
 export const auth = betterAuth({
   baseURL: process.env.BASE_URL || "http://localhost:9998",
@@ -38,8 +39,7 @@ export const auth = betterAuth({
     },
   },
   advanced: {
-    // Кука видна на всех поддоменах *.tunnel.poploker.ru; SameSite=None+Secure для кросс-сайта.
-    ...(cookieDomain ? { crossSubDomainCookies: { enabled: true, domain: cookieDomain } } : {}),
+    // host-only кука + SameSite=None; Secure в проде (кросс-сайт app.→api. без Domain-атрибута).
     defaultCookieAttributes: isProd
       ? { sameSite: "none", secure: true, httpOnly: true }
       : { sameSite: "lax", httpOnly: true },
