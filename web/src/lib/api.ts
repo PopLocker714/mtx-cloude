@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL as string;
+import { API_BASE as BASE } from "./api-base";
 
 // Тонкий клиент нашего Hono API. Куки Better Auth ходят через credentials:include.
 async function api(path: string, init?: RequestInit) {
