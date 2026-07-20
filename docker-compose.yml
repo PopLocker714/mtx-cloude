@@ -31,6 +31,19 @@ services:
     # Порт 9998 наружу НЕ публикуем — backend доступен MediaMTX'у и (позже) ЛК изнутри сети.
     # ЛК/API откроем через Traefik на следующем этапе.
 
+  web:
+    build:
+      context: ./web
+      args:
+        # Vite инлайнит это в бандл на этапе сборки — задать в Dokploy → Environment.
+        VITE_API_URL: "${VITE_API_URL}"
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      PORT: "3000"
+    # Порт наружу не публикуем — Traefik роутит домен app. → web:3000.
+
   mediamtx:
     image: bluenviron/mediamtx:1.19.2
     restart: unless-stopped
