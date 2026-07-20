@@ -14,23 +14,14 @@ logLevel: info
 api: yes
 apiAddress: :9997
 
-# --- Аутентификация ---
-# ВАЖНО: этот список ОБЯЗАН быть объявлен здесь — иначе действует дефолт
-# MediaMTX с пользователем "any" (доступ без пароля!).
-# Логины/пароли-заглушки ниже перекрываются env-переменными из docker-compose:
-#   MTX_AUTHINTERNALUSERS_0_USER / _0_PASS  → публикация (бридж/камеры)
-#   MTX_AUTHINTERNALUSERS_1_USER / _1_PASS  → просмотр live и архива
-authMethod: internal
-authInternalUsers:
-  - user: __locked_publisher__
-    pass: __locked__
-    permissions:
-      - action: publish
-  - user: __locked_viewer__
-    pass: __locked__
-    permissions:
-      - action: read
-      - action: playback
+# --- Аутентификация: внешний авторизатор (наш backend) ---
+# Метод http: на КАЖДОЕ действие MediaMTX шлёт POST на наш backend,
+# который знает, какая камера чья, и решает 200/401. Это даёт мультитенантность.
+# Адрес приходит из env MTX_AUTHHTTPADDRESS (см. docker-compose).
+# authHTTPExclude пуст → аутентифицируем ВСЁ, включая api/metrics (backend
+# пускает их только из приватной docker-сети).
+authMethod: http
+authHTTPExclude: []
 
 # --- Приём потоков (ingest) ---
 rtsp: yes

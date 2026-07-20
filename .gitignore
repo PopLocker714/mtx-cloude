@@ -3,3 +3,6 @@
 
 # локальные записи, если смонтируешь папкой вместо volume
 recordings/
+
+# backend
+backend/node_modules/

@@ -1,30 +1,53 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+      PORT: "9998"
+      BASE_URL: "${API_BASE_URL}"
+      BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET}"
+      TRUSTED_ORIGINS: "${TRUSTED_ORIGINS}"
+    # Порт 9998 наружу НЕ публикуем — backend доступен MediaMTX'у и (позже) ЛК изнутри сети.
+    # ЛК/API откроем через Traefik на следующем этапе.
+
   mediamtx:
-    # Тег запинен и проверен локально — не менять на latest, чтобы сервер не уехал версией.
-    # ВАЖНО: env-переопределение списков (MTX_AUTHINTERNALUSERS_0_...) появилось ПОСЛЕ 1.15 —
-    # на старых версиях авторизация из env молча не применится.
     image: bluenviron/mediamtx:1.19.2
     restart: unless-stopped
+    depends_on:
+      - backend
     ports:
-      - "8554:8554"       # RTSP ingest — сюда пушит бридж/ffmpeg (TCP)
-      - "8888:8888"       # HLS — live-просмотр плеером/в браузере
-      - "8889:8889"       # WebRTC — live-просмотр в браузере с низкой задержкой
-      - "8189:8189/udp"   # WebRTC ICE — медиапоток
-      - "9996:9996"       # Playback API — просмотр/выгрузка архива по времени
-      # 9997 (Control API) наружу НЕ публикуем — он для будущего ЛК, изнутри сети докера
+      - "8554:8554"       # RTSP ingest
+      - "8888:8888"       # HLS live
+      - "8889:8889"       # WebRTC live
+      - "8189:8189/udp"   # WebRTC ICE
+      - "9996:9996"       # Playback API (архив)
     environment:
-      # Публичный IP или домен сервера — нужен WebRTC, чтобы браузер нашёл медиапоток
       MTX_WEBRTCADDITIONALHOSTS: "${SERVER_HOST}"
-      # Логины/пароли пользователей из mediamtx.yml (права заданы там же):
-      # [0] publisher — только публикация потоков (бридж/камеры)
-      # [1] viewer    — только просмотр live (read) и архива (playback)
-      MTX_AUTHINTERNALUSERS_0_USER: "${PUBLISH_USER}"
-      MTX_AUTHINTERNALUSERS_0_PASS: "${PUBLISH_PASS}"
-      MTX_AUTHINTERNALUSERS_1_USER: "${VIEW_USER}"
-      MTX_AUTHINTERNALUSERS_1_PASS: "${VIEW_PASS}"
+      # Внешний авторизатор — наш backend. Без него MediaMTX не пустит никого.
+      MTX_AUTHHTTPADDRESS: "http://backend:9998/internal/mediamtx-auth"
     volumes:
       - ./mediamtx/mediamtx.yml:/mediamtx.yml:ro
       - recordings:/recordings
 
 volumes:
   recordings:
+  pgdata:
