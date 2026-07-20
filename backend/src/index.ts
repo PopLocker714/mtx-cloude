@@ -1,9 +1,29 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { auth } from "./auth";
 import { mediamtxAuth } from "./routes/mediamtx-auth";
 import { api } from "./routes/api";
 
 const app = new Hono();
+
+// CORS для ЛК на другом поддомене: явный whitelist origin из env, credentials:true.
+// Никогда не "*" с credentials — это дыра. Список берём из TRUSTED_ORIGINS.
+const allowedOrigins = (process.env.TRUSTED_ORIGINS || "http://localhost:5173").split(",").map((s) => s.trim());
+app.use(
+  "/api/*",
+  cors({
+    origin: (origin) => (origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0]),
+    credentials: true,
+    allowHeaders: ["Content-Type", "Authorization"],
+    allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+  })
+);
+
+// Единый обработчик ошибок — не отдаём стек/детали наружу (L-6).
+app.onError((err, c) => {
+  console.error("unhandled:", err);
+  return c.json({ error: "internal error" }, 500);
+});
 
 app.get("/health", (c) => c.json({ ok: true, service: "oko-cloud-backend" }));
 

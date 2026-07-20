@@ -70,7 +70,9 @@ export const bridges = pgTable("bridges", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
   name: text("name").notNull().default("Bridge"),
-  pairingCode: text("pairing_code").notNull().unique(),
+  // pairingCode — одноразовый (после привязки → null) и с TTL (pairingExpiresAt).
+  pairingCode: text("pairing_code").unique(),
+  pairingExpiresAt: timestamp("pairing_expires_at", { withTimezone: true }),
   token: text("token").notNull().unique(),
   pairedAt: timestamp("paired_at", { withTimezone: true }),
   lastSeen: timestamp("last_seen", { withTimezone: true }),

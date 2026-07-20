@@ -28,16 +28,19 @@ export async function currentUser(headers: Headers): Promise<{ id: string; role:
 }
 
 // Приватный IP — для служебных действий MediaMTX (api/metrics), не публичных.
+// Разбор по октетам, а не startsWith: 172.x приватен ТОЛЬКО 172.16–172.31 (docker сюда попадает).
 export function isPrivateIp(ip: string | undefined): boolean {
   if (!ip) return false;
   const clean = ip.replace(/^::ffff:/, "");
-  return (
-    clean === "127.0.0.1" ||
-    clean === "::1" ||
-    clean.startsWith("10.") ||
-    clean.startsWith("192.168.") ||
-    /^172\.(1[6-9]|2\d|3[01])\./.test(clean) ||
-    clean.startsWith("172.") || // docker-сети
-    clean.startsWith("fd")
-  );
+  if (clean === "::1") return true;
+  // IPv6 ULA: fc00::/7 → первый байт fc или fd
+  if (/^f[cd]/i.test(clean) && clean.includes(":")) return true;
+  const m = clean.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!m) return false;
+  const [a, b] = [Number(m[1]), Number(m[2])];
+  if (a === 127) return true; // loopback
+  if (a === 10) return true; // 10.0.0.0/8
+  if (a === 192 && b === 168) return true; // 192.168.0.0/16
+  if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12 (docker default)
+  return false;
 }
