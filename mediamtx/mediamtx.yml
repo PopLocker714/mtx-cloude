@@ -1,0 +1,65 @@
+# ============================================================
+# MediaMTX — конфиг видеоядра oko-cloud
+#
+# Как это читается:
+#   1. MediaMTX берёт значения из этого файла;
+#   2. env-переменные вида MTX_* (из docker-compose / Dokploy)
+#      ПЕРЕКРЫВАЮТ значения файла — так секреты не попадают в git.
+# ============================================================
+
+logLevel: info
+
+# --- Control API (для будущего ЛК: список потоков, kick и т.п.) ---
+# Порт 9997 наружу не публикуется (см. docker-compose).
+api: yes
+apiAddress: :9997
+
+# --- Аутентификация ---
+# ВАЖНО: этот список ОБЯЗАН быть объявлен здесь — иначе действует дефолт
+# MediaMTX с пользователем "any" (доступ без пароля!).
+# Логины/пароли-заглушки ниже перекрываются env-переменными из docker-compose:
+#   MTX_AUTHINTERNALUSERS_0_USER / _0_PASS  → публикация (бридж/камеры)
+#   MTX_AUTHINTERNALUSERS_1_USER / _1_PASS  → просмотр live и архива
+authMethod: internal
+authInternalUsers:
+  - user: __locked_publisher__
+    pass: __locked__
+    permissions:
+      - action: publish
+  - user: __locked_viewer__
+    pass: __locked__
+    permissions:
+      - action: read
+      - action: playback
+
+# --- Приём потоков (ingest) ---
+rtsp: yes
+rtspAddress: :8554
+
+rtmp: no
+srt: no
+
+# --- Live-просмотр ---
+hls: yes
+hlsAddress: :8888
+webrtc: yes
+webrtcAddress: :8889
+webrtcLocalUDPAddress: :8189
+# Публичный адрес сервера для WebRTC задаётся env MTX_WEBRTCADDITIONALHOSTS
+
+# --- Просмотр архива по времени ---
+playback: yes
+playbackAddress: :9996
+
+# --- Запись: «бесплатная неделя» ---
+pathDefaults:
+  record: yes
+  recordPath: /recordings/%path/%Y-%m-%d_%H-%M-%S-%f
+  recordFormat: fmp4            # сегменты, которые сразу играются в браузере
+  recordPartDuration: 1s        # как часто сбрасывать данные на диск
+  recordSegmentDuration: 15m    # длина одного файла-сегмента
+  recordDeleteAfter: 168h       # 7 суток; старше — удаляется автоматически
+
+# Принимаем поток с любым именем пути (cam1, cam2, magazin-vhod, ...)
+paths:
+  all_others:
