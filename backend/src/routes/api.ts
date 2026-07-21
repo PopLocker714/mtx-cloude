@@ -14,6 +14,12 @@ function cleanName(v: unknown, fallback: string): string {
   return typeof v === "string" && v.trim() ? v.trim().slice(0, 80) : fallback;
 }
 
+// Хост RTSP-ingest, куда bridge/ffmpeg пушат поток. Настраивается env (домен временный).
+const INGEST_HOST = process.env.INGEST_HOST || "ingest.tunnel.poploker.ru:8554";
+function ingestUrl(path: string, publishToken: string): string {
+  return `rtsp://pub:${publishToken}@${INGEST_HOST}/${path}`;
+}
+
 // Регистрация/логин/сессии обслуживает Better Auth на /api/auth/*.
 // Здесь — только доменные операции; пользователь берётся из BA-сессии.
 async function requireUser(c: any) {
@@ -79,15 +85,38 @@ api.post("/cameras", async (c) => {
       publishToken: randomToken(20),
     })
     .returning();
-  return c.json({ id: cam.id, name: cam.name, path: cam.path, publishToken: cam.publishToken });
+  return c.json({
+    id: cam.id,
+    name: cam.name,
+    path: cam.path,
+    publishToken: cam.publishToken,
+    ingestUrl: ingestUrl(cam.path, cam.publishToken),
+  });
 });
 
-// --- Список моих камер ---
+// --- Список моих камер (без секретов) ---
 api.get("/cameras", async (c) => {
   const u = await requireUser(c);
   if (!u) return c.json({ error: "нужна авторизация" }, 401);
   const rows = await db.select().from(schema.cameras).where(eq(schema.cameras.userId, u.id));
   return c.json(rows.map((r) => ({ id: r.id, name: r.name, path: r.path, createdAt: r.createdAt })));
+});
+
+// --- Данные подключения одной камеры (владелец/админ): path + publishToken + ingestUrl ---
+api.get("/cameras/:id/connection", async (c) => {
+  const u = await requireUser(c);
+  if (!u) return c.json({ error: "нужна авторизация" }, 401);
+  const id = c.req.param("id");
+  if (!UUID_RE.test(id)) return c.json({ error: "неверный id" }, 400);
+  const [cam] = await db.select().from(schema.cameras).where(eq(schema.cameras.id, id)).limit(1);
+  if (!cam || (cam.userId !== u.id && u.role !== "admin")) return c.json({ error: "камера не найдена" }, 404);
+  return c.json({
+    id: cam.id,
+    name: cam.name,
+    path: cam.path,
+    publishToken: cam.publishToken,
+    ingestUrl: ingestUrl(cam.path, cam.publishToken),
+  });
 });
 
 // --- View-токен для плеера (все мои камеры, либо одна для шаринга) ---

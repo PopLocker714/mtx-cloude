@@ -15,9 +15,18 @@ async function api(path: string, init?: RequestInit) {
 }
 
 export type Camera = { id: string; name: string; path: string; createdAt: string };
+export type CameraConnection = {
+  id: string;
+  name: string;
+  path: string;
+  publishToken: string;
+  ingestUrl: string;
+};
 
 export const listCameras = (): Promise<Camera[]> => api("/cameras");
-export const createCamera = (name: string): Promise<Camera> =>
+export const createCamera = (name: string): Promise<CameraConnection> =>
   api("/cameras", { method: "POST", body: JSON.stringify({ name }) });
+export const getConnection = (id: string): Promise<CameraConnection> =>
+  api(`/cameras/${id}/connection`);
 export const createViewToken = (cameraId?: string): Promise<{ token: string; ttlMs: number }> =>
   api("/cameras/view-token", { method: "POST", body: JSON.stringify(cameraId ? { cameraId } : {}) });
