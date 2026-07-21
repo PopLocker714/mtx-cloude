@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { and, eq } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 import { db, schema } from "../db";
 import { randomToken, pairingCode, cameraPath, currentUser } from "../lib";
 
@@ -139,10 +139,40 @@ api.post("/cameras/view-token", async (c) => {
   return c.json({ token, ttlMs: VIEW_TOKEN_TTL_MS });
 });
 
-// --- Админ: все камеры (god-view; каждый просмотр пишется в аудит на уровне auth-hook) ---
+// --- Админ: все камеры всех пользователей (god-view; каждый просмотр аудируется в auth-hook) ---
 api.get("/admin/cameras", async (c) => {
   const u = await requireUser(c);
   if (!u || u.role !== "admin") return c.json({ error: "только админ" }, 403);
-  const rows = await db.select().from(schema.cameras);
-  return c.json(rows.map((r) => ({ id: r.id, userId: r.userId, name: r.name, path: r.path })));
+  const rows = await db
+    .select({
+      id: schema.cameras.id,
+      name: schema.cameras.name,
+      path: schema.cameras.path,
+      createdAt: schema.cameras.createdAt,
+      ownerEmail: schema.user.email,
+    })
+    .from(schema.cameras)
+    .leftJoin(schema.user, eq(schema.cameras.userId, schema.user.id))
+    .orderBy(desc(schema.cameras.createdAt));
+  return c.json(rows);
+});
+
+// --- Админ: журнал доступа (кто/когда/какую камеру смотрел) ---
+api.get("/admin/audit", async (c) => {
+  const u = await requireUser(c);
+  if (!u || u.role !== "admin") return c.json({ error: "только админ" }, 403);
+  const rows = await db
+    .select({
+      at: schema.viewAudit.at,
+      actorRole: schema.viewAudit.actorRole,
+      cameraPath: schema.viewAudit.cameraPath,
+      action: schema.viewAudit.action,
+      ip: schema.viewAudit.ip,
+      actorEmail: schema.user.email,
+    })
+    .from(schema.viewAudit)
+    .leftJoin(schema.user, eq(schema.viewAudit.actorUserId, schema.user.id))
+    .orderBy(desc(schema.viewAudit.at))
+    .limit(100);
+  return c.json(rows);
 });

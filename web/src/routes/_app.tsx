@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, useNavigate, Link, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { Video, LogOut } from "lucide-react";
+import { Video, LogOut, Shield } from "lucide-react";
 import { useSession, signOut } from "@/lib/auth-client";
 import {
   SidebarProvider,
@@ -41,12 +41,21 @@ function AppLayout() {
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname.startsWith("/cameras")}>
+              <SidebarMenuButton asChild isActive={pathname.startsWith("/cameras") || pathname.startsWith("/camera/")}>
                 <Link to="/cameras">
                   <Video /> <span>Камеры</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            {(session.user as { role?: string }).role === "admin" && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname.startsWith("/admin")}>
+                  <Link to="/admin">
+                    <Shield /> <span>Админка</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>

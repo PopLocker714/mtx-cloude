@@ -31,6 +31,19 @@ export const getConnection = (id: string): Promise<CameraConnection> =>
 export const createViewToken = (cameraId?: string): Promise<{ token: string; ttlMs: number }> =>
   api("/cameras/view-token", { method: "POST", body: JSON.stringify(cameraId ? { cameraId } : {}) });
 
+// --- Админ ---
+export type AdminCamera = { id: string; name: string; path: string; createdAt: string; ownerEmail: string | null };
+export type AuditEntry = {
+  at: string;
+  actorRole: string;
+  actorEmail: string | null;
+  cameraPath: string;
+  action: string;
+  ip: string | null;
+};
+export const adminListCameras = (): Promise<AdminCamera[]> => api("/admin/cameras");
+export const adminAudit = (): Promise<AuditEntry[]> => api("/admin/audit");
+
 // --- Архив (MediaMTX playback-сервер, отдельный хост, Basic-auth view-токеном) ---
 export type ArchiveSegment = { start: string; duration: number; url: string };
 
