@@ -27,6 +27,8 @@ services:
       BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET}"
       TRUSTED_ORIGINS: "${TRUSTED_ORIGINS}"
       INGEST_HOST: "${INGEST_HOST}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
       NODE_ENV: "production"
     # Порт 9998 наружу НЕ публикуем — backend доступен MediaMTX'у и (позже) ЛК изнутри сети.
     # ЛК/API откроем через Traefik на следующем этапе.

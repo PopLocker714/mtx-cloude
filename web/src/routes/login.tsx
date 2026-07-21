@@ -4,6 +4,7 @@ import { signIn, signUp } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export const Route = createFileRoute("/login")({ component: LoginPage });
@@ -14,11 +15,16 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (mode === "signup" && !accepted) {
+      setError("Примите условия использования, чтобы продолжить.");
+      return;
+    }
     setError(null);
     setLoading(true);
     const res =
@@ -53,8 +59,18 @@ function LoginPage() {
               <Label htmlFor="password">Пароль</Label>
               <Input id="password" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
+            {mode === "signup" && (
+              <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                <Checkbox checked={accepted} onCheckedChange={(v) => setAccepted(v === true)} className="mt-0.5" />
+                <span>
+                  Я принимаю{" "}
+                  <Link to="/terms" target="_blank" className="underline">условия использования</Link> и{" "}
+                  <Link to="/privacy" target="_blank" className="underline">политику конфиденциальности</Link>.
+                </span>
+              </label>
+            )}
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || (mode === "signup" && !accepted)}>
               {loading ? "…" : mode === "signin" ? "Войти" : "Создать аккаунт"}
             </Button>
           </form>

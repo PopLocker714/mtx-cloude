@@ -1,8 +1,12 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { auth } from "./auth";
+import { ensureAdmin } from "./bootstrap";
 import { mediamtxAuth } from "./routes/mediamtx-auth";
 import { api } from "./routes/api";
+
+// Бутстрап админа из env при старте (create-or-promote).
+await ensureAdmin();
 
 const app = new Hono();
 

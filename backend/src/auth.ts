@@ -36,6 +36,16 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       role: { type: "string", defaultValue: "user", input: false },
+      // Факт принятия условий — ставится сервером при регистрации, клиент задать не может.
+      termsAcceptedAt: { type: "date", required: false, input: false },
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        // Регистрация = принятие пользовательского соглашения/политики. Фиксируем момент.
+        before: async (user) => ({ data: { ...user, termsAcceptedAt: new Date() } }),
+      },
     },
   },
   advanced: {

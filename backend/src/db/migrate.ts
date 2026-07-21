@@ -100,6 +100,12 @@ CREATE TABLE IF NOT EXISTS view_audit (
   at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS view_audit_camera_idx ON view_audit(camera_path);
+
+-- ─── Идемпотентные ALTER для существующих БД (эволюция схемы после первого деплоя) ───
+ALTER TABLE "user"  ADD COLUMN IF NOT EXISTS terms_accepted_at timestamptz;
+ALTER TABLE "user"  ADD COLUMN IF NOT EXISTS role text NOT NULL DEFAULT 'user';
+ALTER TABLE bridges ADD COLUMN IF NOT EXISTS pairing_expires_at timestamptz;
+ALTER TABLE bridges ALTER COLUMN pairing_code DROP NOT NULL;
 `);
 
 console.log("migrate: ok");
