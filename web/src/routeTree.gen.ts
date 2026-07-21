@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppCamerasRouteImport } from './routes/_app/cameras'
+import { Route as AppCameraCameraIdRouteImport } from './routes/_app/camera.$cameraId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -33,16 +34,23 @@ const AppCamerasRoute = AppCamerasRouteImport.update({
   path: '/cameras',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCameraCameraIdRoute = AppCameraCameraIdRouteImport.update({
+  id: '/camera/$cameraId',
+  path: '/camera/$cameraId',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/cameras': typeof AppCamerasRoute
+  '/camera/$cameraId': typeof AppCameraCameraIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/cameras': typeof AppCamerasRoute
+  '/camera/$cameraId': typeof AppCameraCameraIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -50,13 +58,20 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/_app/cameras': typeof AppCamerasRoute
+  '/_app/camera/$cameraId': typeof AppCameraCameraIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/cameras'
+  fullPaths: '/' | '/login' | '/cameras' | '/camera/$cameraId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/cameras'
-  id: '__root__' | '/' | '/_app' | '/login' | '/_app/cameras'
+  to: '/' | '/login' | '/cameras' | '/camera/$cameraId'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/login'
+    | '/_app/cameras'
+    | '/_app/camera/$cameraId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -95,15 +110,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCamerasRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/camera/$cameraId': {
+      id: '/_app/camera/$cameraId'
+      path: '/camera/$cameraId'
+      fullPath: '/camera/$cameraId'
+      preLoaderRoute: typeof AppCameraCameraIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
   AppCamerasRoute: typeof AppCamerasRoute
+  AppCameraCameraIdRoute: typeof AppCameraCameraIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppCamerasRoute: AppCamerasRoute,
+  AppCameraCameraIdRoute: AppCameraCameraIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

@@ -1,4 +1,4 @@
-import { API_BASE as BASE } from "./api-base";
+import { API_BASE as BASE, ARCHIVE_BASE } from "./api-base";
 
 // Тонкий клиент нашего Hono API. Куки Better Auth ходят через credentials:include.
 async function api(path: string, init?: RequestInit) {
@@ -30,3 +30,26 @@ export const getConnection = (id: string): Promise<CameraConnection> =>
   api(`/cameras/${id}/connection`);
 export const createViewToken = (cameraId?: string): Promise<{ token: string; ttlMs: number }> =>
   api("/cameras/view-token", { method: "POST", body: JSON.stringify(cameraId ? { cameraId } : {}) });
+
+// --- Архив (MediaMTX playback-сервер, отдельный хост, Basic-auth view-токеном) ---
+export type ArchiveSegment = { start: string; duration: number; url: string };
+
+function basic(token: string) {
+  return "Basic " + btoa("view:" + token);
+}
+
+export async function listArchive(path: string, token: string): Promise<ArchiveSegment[]> {
+  const res = await fetch(`${ARCHIVE_BASE}/list?path=${encodeURIComponent(path)}`, {
+    headers: { Authorization: basic(token) },
+  });
+  if (!res.ok) throw new Error("Ошибка архива: " + res.status);
+  return res.json();
+}
+
+// Скачивает кусок архива как mp4-blob (для проигрывания в <video>, auth заголовком).
+export async function fetchArchiveClip(path: string, startISO: string, durationSec: number, token: string): Promise<string> {
+  const url = `${ARCHIVE_BASE}/get?path=${encodeURIComponent(path)}&start=${encodeURIComponent(startISO)}&duration=${durationSec}&format=mp4`;
+  const res = await fetch(url, { headers: { Authorization: basic(token) } });
+  if (!res.ok) throw new Error("Ошибка воспроизведения: " + res.status);
+  return URL.createObjectURL(await res.blob());
+}

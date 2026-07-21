@@ -12,3 +12,20 @@ export const API_BASE: string = (() => {
   }
   return "";
 })();
+
+// Медиа-хосты выводим из API-хоста: api.<домен> → hls./archive./live.<домен>.
+// В dev (localhost) — на портах MediaMTX.
+function siblingHost(sub: string, devPort: number): string {
+  try {
+    const u = new URL(API_BASE);
+    if (u.host.startsWith("api.")) return `${u.protocol}//${sub}.${u.host.slice(4)}`;
+    if (u.hostname === "localhost") return `${u.protocol}//localhost:${devPort}`;
+  } catch {
+    /* API_BASE пуст на SSR — на клиенте пересчитается */
+  }
+  return "";
+}
+
+export const HLS_BASE = siblingHost("hls", 8888);
+export const ARCHIVE_BASE = siblingHost("archive", 9996);
+export const LIVE_BASE = siblingHost("live", 8889);

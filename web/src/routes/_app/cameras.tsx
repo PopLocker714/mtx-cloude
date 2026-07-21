@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Plus, Video, Link2 } from "lucide-react";
 import { listCameras, type Camera } from "@/lib/api";
@@ -61,10 +61,19 @@ function CamerasPage() {
               <TableBody>
                 {cameras.map((c) => (
                   <TableRow key={c.id}>
-                    <TableCell className="font-medium">{c.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link to="/camera/$cameraId" params={{ cameraId: c.id }} className="hover:underline">
+                        {c.name}
+                      </Link>
+                    </TableCell>
                     <TableCell className="font-mono text-xs">{c.path}</TableCell>
                     <TableCell className="text-muted-foreground">{new Date(c.createdAt).toLocaleString()}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right space-x-2">
+                      <Button variant="secondary" size="sm" asChild>
+                        <Link to="/camera/$cameraId" params={{ cameraId: c.id }}>
+                          <Video className="size-4" /> Смотреть
+                        </Link>
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => setConnId(c.id)}>
                         <Link2 className="size-4" /> Подключение
                       </Button>
