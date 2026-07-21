@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { signIn, signUp } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 export const Route = createFileRoute("/login")({ component: LoginPage });
 
 function LoginPage() {
-  const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,9 +30,13 @@ function LoginPage() {
       mode === "signin"
         ? await signIn.email({ email, password })
         : await signUp.email({ email, password, name: name || email });
-    setLoading(false);
-    if (res.error) return setError(res.error.message || "Ошибка");
-    navigate({ to: "/cameras" });
+    if (res.error) {
+      setLoading(false);
+      return setError(res.error.message || "Ошибка");
+    }
+    // Полная навигация (не SPA): свежий заход в кабинет с уже установленной кукой —
+    // так useSession гарантированно видит сессию, без гонки со старым кэшем.
+    window.location.href = "/cameras";
   }
 
   return (
