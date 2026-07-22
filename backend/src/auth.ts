@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { admin } from "better-auth/plugins";
 import { db, schema } from "./db";
 
 // Секрет обязателен и не короче 32 символов — иначе fail-closed (C-1 из аудита).
@@ -33,9 +34,11 @@ export const auth = betterAuth({
   },
   // Rate-limit включён (защита логина/регистрации от перебора).
   rateLimit: { enabled: true, window: 60, max: 30 },
+  // Admin-плагин: управляет ролями (role), даёт setRole/listUsers/ban из UI.
+  // role/banned/banReason/banExpires — поля плагина (в schema.ts).
+  plugins: [admin({ defaultRole: "user", adminRoles: ["admin"] })],
   user: {
     additionalFields: {
-      role: { type: "string", defaultValue: "user", input: false },
       // Факт принятия условий — ставится сервером при регистрации, клиент задать не может.
       termsAcceptedAt: { type: "date", required: false, input: false },
     },

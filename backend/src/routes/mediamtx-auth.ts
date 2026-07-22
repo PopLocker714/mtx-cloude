@@ -62,19 +62,19 @@ mediamtxAuth.post("/", async (c) => {
     const actor = await db.select().from(schema.user).where(eq(schema.user.id, t.userId)).limit(1);
     const role = actor[0]?.role ?? "user";
 
-    // Админ: доступ к любой камере, но с записью в аудит.
+    // Юзер видит только свою камеру (изоляция тенантов).
+    const ownsPath = cam[0].userId === t.userId;
+    const scopeOk = !t.cameraId || t.cameraId === cam[0].id;
+
+    // Админ: доступ к ЛЮБОЙ камере (god-view). Аудируем ТОЛЬКО привилегированный
+    // доступ — просмотр админом ЧУЖОЙ камеры. Свои камеры и обычные юзеры не логируются
+    // (журнал = только god-view, без шума и без путаницы с исторической ролью).
     if (role === "admin") {
-      await audit({ id: t.userId, role: "admin" }, path, action, body.ip);
+      if (!ownsPath) await audit({ id: t.userId, role: "admin" }, path, action, body.ip);
       return c.body(null, 200);
     }
 
-    // Юзер: путь должен принадлежать ему; при cameraId — совпасть с камерой.
-    const ownsPath = cam[0].userId === t.userId;
-    const scopeOk = !t.cameraId || t.cameraId === cam[0].id;
-    if (ownsPath && scopeOk) {
-      await audit({ id: t.userId, role }, path, action, body.ip);
-      return c.body(null, 200);
-    }
+    if (ownsPath && scopeOk) return c.body(null, 200);
     return c.body(null, 401);
   }
 

@@ -104,6 +104,10 @@ CREATE INDEX IF NOT EXISTS view_audit_camera_idx ON view_audit(camera_path);
 -- ─── Идемпотентные ALTER для существующих БД (эволюция схемы после первого деплоя) ───
 ALTER TABLE "user"  ADD COLUMN IF NOT EXISTS terms_accepted_at timestamptz;
 ALTER TABLE "user"  ADD COLUMN IF NOT EXISTS role text NOT NULL DEFAULT 'user';
+-- Поля admin-плагина Better Auth
+ALTER TABLE "user"  ADD COLUMN IF NOT EXISTS banned boolean DEFAULT false;
+ALTER TABLE "user"  ADD COLUMN IF NOT EXISTS ban_reason text;
+ALTER TABLE "user"  ADD COLUMN IF NOT EXISTS ban_expires timestamptz;
 ALTER TABLE bridges ADD COLUMN IF NOT EXISTS pairing_expires_at timestamptz;
 ALTER TABLE bridges ALTER COLUMN pairing_code DROP NOT NULL;
 `);
