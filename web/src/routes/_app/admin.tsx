@@ -48,6 +48,20 @@ function AdminPage() {
     }
   }
 
+  async function resetUserPassword(u: AdminUser) {
+    const pw = prompt(`Новый пароль для ${u.email} (≥8 символов):`);
+    if (!pw) return;
+    if (pw.length < 8) return setError("Пароль должен быть не короче 8 символов.");
+    setBusyUser(u.id);
+    try {
+      const res = await authClient.admin.setUserPassword({ userId: u.id, newPassword: pw });
+      if (res.error) setError(res.error.message || "Не удалось сменить пароль");
+      else setError(null);
+    } finally {
+      setBusyUser(null);
+    }
+  }
+
   if (session && !isAdmin) {
     return (
       <Card>
@@ -93,7 +107,10 @@ function AdminPage() {
                     <Badge variant={u.role === "admin" ? "default" : "outline"}>{u.role ?? "user"}</Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">{new Date(u.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right space-x-2">
+                    <Button variant="ghost" size="sm" disabled={busyUser === u.id} onClick={() => resetUserPassword(u)}>
+                      Сбросить пароль
+                    </Button>
                     {u.id === myId ? (
                       <span className="text-xs text-muted-foreground">это вы</span>
                     ) : (

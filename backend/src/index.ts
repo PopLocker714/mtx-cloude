@@ -4,6 +4,7 @@ import { auth } from "./auth";
 import { ensureAdmin } from "./bootstrap";
 import { mediamtxAuth } from "./routes/mediamtx-auth";
 import { api } from "./routes/api";
+import { stubAuth } from "./routes/stub-auth";
 
 // Бутстрап админа из env при старте (create-or-promote).
 await ensureAdmin();
@@ -39,6 +40,9 @@ app.route("/internal/mediamtx-auth", mediamtxAuth);
 
 // Доменный API (камеры, bridge, view-токены) — авторизация по BA-сессии.
 app.route("/api", api);
+
+// ЗАГОТОВКА флоу подтверждения email / сброса пароля (стаб, любой код). /api/stub/*.
+app.route("/api/stub", stubAuth);
 
 const port = Number(process.env.PORT || 9998);
 console.log(`oko-cloud backend on :${port}`);

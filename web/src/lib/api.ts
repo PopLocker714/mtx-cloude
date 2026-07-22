@@ -44,6 +44,14 @@ export type AuditEntry = {
 export const adminListCameras = (): Promise<AdminCamera[]> => api("/admin/cameras");
 export const adminAudit = (): Promise<AuditEntry[]> => api("/admin/audit");
 
+// --- Заготовка флоу подтверждения email / сброса пароля (стаб-эндпоинты, любой код) ---
+export const stubSendCode = (email: string) =>
+  api("/stub/send-code", { method: "POST", body: JSON.stringify({ email }) });
+export const stubVerifyEmail = (email: string, code: string) =>
+  api("/stub/verify-email", { method: "POST", body: JSON.stringify({ email, code }) });
+export const stubResetPassword = (email: string, code: string, newPassword: string) =>
+  api("/stub/reset-password", { method: "POST", body: JSON.stringify({ email, code, newPassword }) });
+
 // --- Архив (MediaMTX playback-сервер, отдельный хост, Basic-auth view-токеном) ---
 export type ArchiveSegment = { start: string; duration: number; url: string };
 

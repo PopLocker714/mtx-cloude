@@ -32,8 +32,8 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 8,
   },
-  // Rate-limit включён (защита логина/регистрации от перебора).
-  rateLimit: { enabled: true, window: 60, max: 30 },
+  // Rate-limit по IP (за Traefik IP берём из X-Forwarded-For). NO_RATE_LIMIT=1 отключает (для локальных тестов).
+  rateLimit: { enabled: process.env.NO_RATE_LIMIT !== "1", window: 60, max: 30 },
   // Admin-плагин: управляет ролями (role), даёт setRole/listUsers/ban из UI.
   // role/banned/banReason/banExpires — поля плагина (в schema.ts).
   plugins: [admin({ defaultRole: "user", adminRoles: ["admin"] })],
@@ -52,6 +52,9 @@ export const auth = betterAuth({
     },
   },
   advanced: {
+    // За реверс-прокси (Traefik) реальный IP клиента — в X-Forwarded-For. Нужно для корректного
+    // per-IP rate-limit (иначе Better Auth валит всех в одно общее ведро).
+    ipAddress: { ipAddressHeaders: ["x-forwarded-for", "x-real-ip"] },
     // host-only кука + SameSite=None; Secure в проде (кросс-сайт app.→api. без Domain-атрибута).
     defaultCookieAttributes: isProd
       ? { sameSite: "none", secure: true, httpOnly: true }

@@ -29,6 +29,7 @@ services:
       INGEST_HOST: "${INGEST_HOST}"
       ADMIN_EMAIL: "${ADMIN_EMAIL}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
+      STUB_AUTH: "${STUB_AUTH}"
       NODE_ENV: "production"
     # Порт 9998 наружу НЕ публикуем — backend доступен MediaMTX'у и (позже) ЛК изнутри сети.
     # ЛК/API откроем через Traefik на следующем этапе.

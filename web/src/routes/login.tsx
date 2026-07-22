@@ -34,9 +34,10 @@ function LoginPage() {
       setLoading(false);
       return setError(res.error.message || "Ошибка");
     }
-    // Полная навигация (не SPA): свежий заход в кабинет с уже установленной кукой —
-    // так useSession гарантированно видит сессию, без гонки со старым кэшем.
-    window.location.href = "/cameras";
+    // Регистрация → шаг подтверждения почты (заготовка флоу); вход → сразу в кабинет.
+    // Полная навигация (не SPA): свежий заход с уже установленной кукой, без гонки кэша useSession.
+    window.location.href =
+      mode === "signup" ? `/verify-email?email=${encodeURIComponent(email)}` : "/cameras";
   }
 
   return (
@@ -77,6 +78,11 @@ function LoginPage() {
               {loading ? "…" : mode === "signin" ? "Войти" : "Создать аккаунт"}
             </Button>
           </form>
+          {mode === "signin" && (
+            <p className="mt-3 text-center">
+              <Link to="/forgot-password" className="text-sm text-muted-foreground underline">Забыли пароль?</Link>
+            </p>
+          )}
           <button
             type="button"
             className="mt-4 text-sm text-muted-foreground underline w-full text-center"
