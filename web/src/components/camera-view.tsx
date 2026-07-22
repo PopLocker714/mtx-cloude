@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Play, RefreshCw, Radio, Film } from "lucide-react";
+import { Play, RefreshCw, Radio, Film, Loader2, WifiOff } from "lucide-react";
 import { getConnection, createViewToken, listArchive, fetchArchiveClip, type ArchiveSegment } from "@/lib/api";
 import { LIVE_BASE } from "@/lib/api-base";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 // --- Минимальный WHEP-клиент (WebRTC live через MediaMTX) ---
 async function startWhep(video: HTMLVideoElement, path: string, token: string): Promise<RTCPeerConnection> {
@@ -49,7 +50,6 @@ export function CameraView({ cameraId }: { cameraId: string }) {
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // подгрузка path + view-токена
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -108,28 +108,61 @@ function LiveCard({ path, token }: { path: string; token: string }) {
 
   return (
     <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0">
+      <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Radio className="size-4" /> Прямой эфир
-          {state === "live" && <span className="text-xs text-red-600 font-normal">● LIVE</span>}
+          {state === "live" && <span className="text-xs text-red-600 font-medium">● В ЭФИРЕ</span>}
         </CardTitle>
-        <Button size="sm" variant="outline" onClick={connect} disabled={state === "connecting"}>
-          {state === "connecting" ? "…" : <><Play className="size-4" /> Смотреть</>}
-        </Button>
       </CardHeader>
       <CardContent>
-        <video ref={videoRef} className="w-full aspect-video rounded bg-black" playsInline muted controls />
-        {state === "idle" && <p className="text-xs text-muted-foreground mt-2">Нажмите «Смотреть», чтобы подключиться к камере.</p>}
-        {state === "error" && <p className="text-xs text-destructive mt-2">Камера офлайн или поток недоступен.</p>}
+        <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
+          <video
+            ref={videoRef}
+            className="w-full h-full object-contain"
+            playsInline
+            muted
+            controls={state === "live"}
+          />
+          {/* Плеер грузится по клику: пока не «в эфире» — кликабельная накладка */}
+          {state !== "live" && (
+            <button
+              type="button"
+              onClick={connect}
+              disabled={state === "connecting"}
+              className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 text-white transition hover:bg-black/40 disabled:cursor-wait"
+            >
+              {state === "connecting" ? (
+                <>
+                  <Loader2 className="size-9 animate-spin" />
+                  <span className="text-sm">Подключение…</span>
+                </>
+              ) : state === "error" ? (
+                <>
+                  <WifiOff className="size-9" />
+                  <span className="text-sm">Камера офлайн или поток недоступен</span>
+                  <span className="text-xs underline">Повторить</span>
+                </>
+              ) : (
+                <>
+                  <span className="rounded-full bg-white/15 p-4 ring-1 ring-white/25">
+                    <Play className="size-8 fill-white" />
+                  </span>
+                  <span className="text-sm font-medium">Смотреть эфир</span>
+                </>
+              )}
+            </button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
 }
 
 function ArchiveCard({ path, token }: { path: string; token: string }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [segments, setSegments] = useState<ArchiveSegment[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(null); // start выбранной записи
+  const [clipUrl, setClipUrl] = useState<string | null>(null); // blob-URL текущего клипа
   const [loadingClip, setLoadingClip] = useState<string | null>(null);
 
   async function refresh() {
@@ -147,12 +180,12 @@ function ArchiveCard({ path, token }: { path: string; token: string }) {
 
   async function play(seg: ArchiveSegment) {
     setLoadingClip(seg.start);
+    setError(null);
     try {
       const dur = Math.min(Math.ceil(seg.duration), 600); // максимум 10 минут за раз
       const url = await fetchArchiveClip(path, seg.start, dur, token);
-      const v = videoRef.current!;
-      v.src = url;
-      await v.play().catch(() => {});
+      setSelected(seg.start);
+      setClipUrl(url); // video монтируется с этим src и автоплеится (muted)
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -168,53 +201,87 @@ function ArchiveCard({ path, token }: { path: string; token: string }) {
         <CardTitle className="flex items-center gap-2 text-base">
           <Film className="size-4" /> Архив (7 дней)
         </CardTitle>
-        <Button size="sm" variant="ghost" onClick={refresh}>
+        <Button size="sm" variant="ghost" onClick={refresh} title="Обновить">
           <RefreshCw className="size-4" />
         </Button>
       </CardHeader>
       <CardContent className="space-y-3">
-        <video ref={videoRef} className="w-full aspect-video rounded bg-black" playsInline controls muted />
+        {/* Плеер архива: video монтируется только когда выбрана запись (по клику); иначе — подсказка */}
+        <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
+          {clipUrl ? (
+            <video key={clipUrl} src={clipUrl} className="w-full h-full object-contain" autoPlay muted playsInline controls />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-muted text-muted-foreground">
+              <Film className="size-8 opacity-40" />
+              <span className="text-sm">Выберите запись ниже для просмотра</span>
+            </div>
+          )}
+          {loadingClip && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60 text-white">
+              <Loader2 className="size-8 animate-spin" />
+            </div>
+          )}
+        </div>
+
         {error && <p className="text-xs text-destructive">{error}</p>}
+
         {segments === null ? (
           <p className="text-xs text-muted-foreground">Загрузка архива…</p>
         ) : segments.length === 0 ? (
           <p className="text-xs text-muted-foreground">Записей пока нет. Как камера начнёт вещать — здесь появится архив.</p>
         ) : (
           <>
-            {/* Полоса-таймлайн: блоки записей на общем диапазоне */}
+            {/* Полоса-таймлайн: кликабельные блоки записей */}
             {span && (
-              <div className="relative h-6 rounded bg-muted overflow-hidden">
+              <div className="relative h-7 rounded bg-muted overflow-hidden" title="Записи за период">
                 {segments.map((s) => {
                   const start = new Date(s.start).getTime();
                   const left = ((start - span.from) / span.width) * 100;
-                  const w = Math.max((s.duration * 1000) / span.width * 100, 0.5);
+                  const w = Math.max((s.duration * 1000) / span.width * 100, 0.6);
                   return (
                     <button
                       key={s.start}
                       onClick={() => play(s)}
-                      title={`${fmt(new Date(s.start))} · ${Math.round(s.duration)}с`}
-                      className="absolute top-0 h-full bg-primary/70 hover:bg-primary"
+                      title={`${fmt(new Date(s.start))} · ${Math.round(s.duration)} с — нажмите для просмотра`}
+                      className={cn(
+                        "absolute top-0 h-full transition hover:brightness-110",
+                        selected === s.start ? "bg-primary ring-2 ring-primary ring-inset" : "bg-primary/60 hover:bg-primary/80"
+                      )}
                       style={{ left: `${left}%`, width: `${w}%` }}
                     />
                   );
                 })}
               </div>
             )}
-            {/* Список записей */}
-            <div className="max-h-40 overflow-y-auto space-y-1">
-              {segments.map((s) => (
-                <button
-                  key={s.start}
-                  onClick={() => play(s)}
-                  className="flex w-full items-center justify-between rounded px-2 py-1 text-sm hover:bg-muted text-left"
-                >
-                  <span>{fmt(new Date(s.start))}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {loadingClip === s.start ? "загрузка…" : `${Math.round(s.duration)} с`}
-                  </span>
-                </button>
-              ))}
+
+            {/* Список записей — явно кликабельный */}
+            <div className="max-h-48 overflow-y-auto rounded-md border divide-y">
+              {segments.map((s) => {
+                const active = selected === s.start;
+                return (
+                  <button
+                    key={s.start}
+                    onClick={() => play(s)}
+                    className={cn(
+                      "flex w-full items-center gap-3 px-3 py-2 text-sm text-left transition hover:bg-muted cursor-pointer",
+                      active && "bg-primary/10"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "flex size-7 shrink-0 items-center justify-center rounded-full",
+                        active ? "bg-primary text-primary-foreground" : "bg-muted text-primary"
+                      )}
+                    >
+                      {loadingClip === s.start ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4 fill-current" />}
+                    </span>
+                    <span className="flex-1 font-medium">{fmt(new Date(s.start))}</span>
+                    <span className="text-xs text-muted-foreground">{Math.round(s.duration)} с</span>
+                  </button>
+                );
+              })}
             </div>
+            <p className="text-xs text-muted-foreground">Нажмите на запись, чтобы посмотреть её в плеере выше.</p>
           </>
         )}
       </CardContent>
