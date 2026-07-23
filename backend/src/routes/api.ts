@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq, desc, isNull } from "drizzle-orm";
 import { db, schema } from "../db";
 import {
   randomToken, pairingCode, cameraPath, currentUser,
@@ -232,6 +232,90 @@ api.post("/cameras/view-token", async (c) => {
     expiresAt: new Date(Date.now() + VIEW_TOKEN_TTL_MS),
   });
   return c.json({ token, ttlMs: VIEW_TOKEN_TTL_MS });
+});
+
+// ─── ONVIF-обнаружение (Этап 2) ───
+
+// --- Найденные в LAN ONVIF-камеры, ещё не добавленные и не скрытые (по моим bridge'ам) ---
+api.get("/discovered", async (c) => {
+  const u = await requireUser(c);
+  if (!u) return c.json({ error: "нужна авторизация" }, 401);
+  const rows = await db
+    .select({
+      id: schema.discoveredCameras.id,
+      bridgeId: schema.discoveredCameras.bridgeId,
+      bridgeName: schema.bridges.name,
+      name: schema.discoveredCameras.name,
+      manufacturer: schema.discoveredCameras.manufacturer,
+      model: schema.discoveredCameras.model,
+      ip: schema.discoveredCameras.ip,
+      lastSeenAt: schema.discoveredCameras.lastSeenAt,
+    })
+    .from(schema.discoveredCameras)
+    .innerJoin(schema.bridges, eq(schema.discoveredCameras.bridgeId, schema.bridges.id))
+    .where(
+      and(
+        eq(schema.bridges.userId, u.id),
+        isNull(schema.discoveredCameras.cameraId), // ещё не усыновлена
+        isNull(schema.discoveredCameras.dismissedAt) // не скрыта
+      )
+    )
+    .orderBy(desc(schema.discoveredCameras.lastSeenAt));
+  return c.json(rows);
+});
+
+// --- Усыновить найденную камеру: юзер вводит только логин/пароль, RTSP резолвит агент через ONVIF ---
+api.post("/discovered/:id/adopt", async (c) => {
+  const u = await requireUser(c);
+  if (!u) return c.json({ error: "нужна авторизация" }, 401);
+  const id = c.req.param("id");
+  if (!UUID_RE.test(id)) return c.json({ error: "неверный id" }, 400);
+  const { name, username, password } = await c.req.json().catch(() => ({}));
+  if (typeof username !== "string" || !username.trim() || typeof password !== "string" || !password) {
+    return c.json({ error: "нужны логин и пароль камеры" }, 400);
+  }
+  const [d] = await db.select().from(schema.discoveredCameras).where(eq(schema.discoveredCameras.id, id)).limit(1);
+  if (!d) return c.json({ error: "не найдено" }, 404);
+  const [br] = await db.select().from(schema.bridges).where(eq(schema.bridges.id, d.bridgeId)).limit(1);
+  if (!br || br.userId !== u.id) return c.json({ error: "не найдено" }, 404); // не мой bridge
+  if (d.cameraId) return c.json({ error: "камера уже добавлена" }, 409);
+
+  // encryptSecret вне try: отсутствие ключа → 500 (честная ошибка конфигурации), не маскируем как 409.
+  const creds = encryptSecret(JSON.stringify({ u: username.trim(), p: password }));
+  let cam;
+  try {
+    [cam] = await db
+      .insert(schema.cameras)
+      .values({
+        userId: u.id,
+        bridgeId: d.bridgeId,
+        name: cleanName(name, d.name || "Камера"),
+        path: cameraPath(),
+        publishToken: randomToken(20),
+        deviceKey: d.deviceKey,
+        onvifUrl: d.onvifUrl,
+        onvifCreds: creds,
+      })
+      .returning();
+  } catch {
+    return c.json({ error: "камера уже добавлена" }, 409); // конфликт (bridge_id, device_key)
+  }
+  await db.update(schema.discoveredCameras).set({ cameraId: cam.id }).where(eq(schema.discoveredCameras.id, id));
+  return c.json({ id: cam.id, name: cam.name, path: cam.path });
+});
+
+// --- Скрыть находку (мягко; агент может пере-обнаружить, но в списке не покажем) ---
+api.delete("/discovered/:id", async (c) => {
+  const u = await requireUser(c);
+  if (!u) return c.json({ error: "нужна авторизация" }, 401);
+  const id = c.req.param("id");
+  if (!UUID_RE.test(id)) return c.json({ error: "неверный id" }, 400);
+  const [d] = await db.select().from(schema.discoveredCameras).where(eq(schema.discoveredCameras.id, id)).limit(1);
+  if (!d) return c.json({ error: "не найдено" }, 404);
+  const [br] = await db.select().from(schema.bridges).where(eq(schema.bridges.id, d.bridgeId)).limit(1);
+  if (!br || br.userId !== u.id) return c.json({ error: "не найдено" }, 404);
+  await db.update(schema.discoveredCameras).set({ dismissedAt: new Date() }).where(eq(schema.discoveredCameras.id, id));
+  return c.json({ ok: true });
 });
 
 // --- Админ: все камеры всех пользователей (god-view; каждый просмотр аудируется в auth-hook) ---

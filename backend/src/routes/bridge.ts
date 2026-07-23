@@ -10,27 +10,74 @@ export const bridgeApi = new Hono<{ Variables: { bridge: BridgeRow } }>();
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Единый источник desired-state (DRY для /cameras и /heartbeat). Отдаём только камеры с источником.
+// Единый источник desired-state (DRY для /cameras и /heartbeat). Отдаём камеры с источником:
+// либо готовый RTSP (Этап 1), либо ONVIF-дескриптор — агент сам резолвит RTSP через GetStreamUri (Этап 2).
 async function desiredState(b: BridgeRow) {
   const rows = await db
     .select()
     .from(schema.cameras)
     .where(and(eq(schema.cameras.bridgeId, b.id), eq(schema.cameras.userId, b.userId!))); // defense-in-depth
-  return rows
-    .filter((r) => r.sourceUrl && isRtspUrl(safeDecrypt(r.sourceUrl)))
-    .map((r) => ({
-      cameraId: r.id,
-      path: r.path,
-      enabled: r.enabled,
-      ingestUrl: ingestUrl(r.path, r.publishToken),
-      sourceUrl: decryptSecret(r.sourceUrl!),
-    }));
+  const out: Array<Record<string, unknown>> = [];
+  for (const r of rows) {
+    const base = { cameraId: r.id, path: r.path, enabled: r.enabled, ingestUrl: ingestUrl(r.path, r.publishToken) };
+    // ONVIF-режим: креды и xaddr — агент резолвит RTSP на своей стороне (креды не уходят в MediaMTX).
+    if (r.onvifUrl && r.onvifCreds) {
+      const creds = safeCreds(r.onvifCreds);
+      if (creds) {
+        out.push({ ...base, onvif: { url: r.onvifUrl, username: creds.u, password: creds.p } });
+        continue;
+      }
+    }
+    // RTSP-режим (Этап 1): готовый источник.
+    if (r.sourceUrl) {
+      const src = safeDecrypt(r.sourceUrl);
+      if (isRtspUrl(src)) out.push({ ...base, sourceUrl: src });
+    }
+  }
+  return out;
 }
 function safeDecrypt(blob: string): string {
   try {
     return decryptSecret(blob);
   } catch {
     return "";
+  }
+}
+function safeCreds(blob: string): { u: string; p: string } | null {
+  try {
+    const o = JSON.parse(decryptSecret(blob));
+    return o && typeof o.u === "string" && typeof o.p === "string" ? { u: o.u, p: o.p } : null;
+  } catch {
+    return null;
+  }
+}
+function strOrNull(v: unknown, max: number): string | null {
+  return typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null;
+}
+
+// Приём найденных ONVIF-устройств (пришли в теле heartbeat). Upsert по (bridgeId, deviceKey):
+// обновляем «живость»/метаданные, НЕ трогаем camera_id и dismissed_at (усыновление/скрытие — решение из ЛК).
+async function ingestDiscovered(b: BridgeRow, devices: unknown[]) {
+  for (const d of devices.slice(0, 64)) {
+    const dev = d as Record<string, unknown>;
+    const deviceKey = strOrNull(dev.deviceKey, 200);
+    const onvifUrl = strOrNull(dev.onvifUrl, 500);
+    if (!deviceKey || !onvifUrl || !/^https?:\/\//i.test(onvifUrl)) continue;
+    const meta = {
+      name: strOrNull(dev.name, 120),
+      manufacturer: strOrNull(dev.manufacturer, 80),
+      model: strOrNull(dev.model, 80),
+      ip: strOrNull(dev.ip, 64),
+      onvifUrl,
+      lastSeenAt: new Date(),
+    };
+    await db
+      .insert(schema.discoveredCameras)
+      .values({ bridgeId: b.id, deviceKey, ...meta })
+      .onConflictDoUpdate({
+        target: [schema.discoveredCameras.bridgeId, schema.discoveredCameras.deviceKey],
+        set: meta,
+      });
   }
 }
 
@@ -69,5 +116,7 @@ bridgeApi.post("/heartbeat", async (c) => {
       .set({ lastSeen: new Date() }) // online деривируем, булев не храним
       .where(and(eq(schema.cameras.id, s.cameraId), eq(schema.cameras.bridgeId, b.id)));
   }
+  // ONVIF-находки агента (если приложил к heartbeat) → «входящие» в ЛК.
+  if (Array.isArray(body.discovered) && body.discovered.length) await ingestDiscovered(b, body.discovered);
   return c.json({ intervalMs: HEARTBEAT_MS, cameras: await desiredState(b) });
 });

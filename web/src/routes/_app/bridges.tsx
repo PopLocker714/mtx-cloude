@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Server, Plus, Check, Copy, Circle, Trash2, Ban } from "lucide-react";
+import { Server, Plus, Copy, Circle, Trash2, Ban } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { listBridges, createBridge, revokeBridge, deleteBridge, type Bridge } from "@/lib/api";
 import { API_BASE } from "@/lib/api-base";
 import { Button } from "@/components/ui/button";
@@ -15,31 +16,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/_app/bridges")({ component: BridgesPage });
-
-function Copyable({ value }: { value: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <div className="flex gap-2">
-      <Input readOnly value={value} className="font-mono text-xs" onFocus={(e) => e.target.select()} />
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        onClick={() => {
-          navigator.clipboard.writeText(value);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
-        }}
-      >
-        {copied ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
-      </Button>
-    </div>
-  );
-}
 
 function BridgesPage() {
   const [bridges, setBridges] = useState<Bridge[] | null>(null);
@@ -74,6 +53,8 @@ function BridgesPage() {
   const dockerCmd = created
     ? `docker run -d --name oko-bridge --restart unless-stopped \\\n  -e OKO_API=${API_BASE} -e OKO_PAIR_CODE=${created.code} \\\n  -v oko-bridge-data:/data oko-bridge:latest`
     : "";
+  // QR для привязки: приложение-бридж (или бридж со сканером) читает адрес API и одноразовый код.
+  const qrPayload = created ? JSON.stringify({ t: "oko-bridge", api: API_BASE, code: created.code }) : "";
 
   return (
     <div className="space-y-4">
@@ -161,6 +142,15 @@ function BridgesPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            {/* QR — быстрая привязка сканером; код и docker-команда ниже как альтернатива */}
+            <div className="flex flex-col items-center gap-2">
+              <div className="rounded-lg bg-white p-3">
+                <QRCodeSVG value={qrPayload} size={168} level="M" />
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                Отсканируйте в приложении oko-bridge, либо используйте код и команду ниже.
+              </p>
+            </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Код привязки</Label>
               <div className="text-2xl font-mono font-semibold tracking-widest text-center py-2 bg-muted rounded-md">

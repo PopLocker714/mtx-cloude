@@ -3,14 +3,27 @@ import { AGENT_VERSION } from "./config";
 // Клиент API oko-cloud. 401 на bridge-эндпоинтах = токен отозван → RevokedError (агент стирает state).
 export class RevokedError extends Error {}
 
+// Камера может прийти в одном из двух режимов:
+//  • RTSP (Этап 1): готовый sourceUrl.
+//  • ONVIF (Этап 2): дескриптор onvif — агент сам резолвит RTSP через GetStreamUri.
 export type DesiredCamera = {
   cameraId: string;
   path: string;
   enabled: boolean;
   ingestUrl: string;
-  sourceUrl: string;
+  sourceUrl?: string;
+  onvif?: { url: string; username: string; password: string };
 };
 export type CameraStatus = { cameraId: string; status: string };
+// Найденное в LAN ONVIF-устройство (агент → облако, прикладывается к heartbeat).
+export type DiscoveredDevice = {
+  deviceKey: string;
+  onvifUrl: string;
+  ip?: string;
+  name?: string;
+  manufacturer?: string;
+  model?: string;
+};
 
 export async function pair(apiBase: string, code: string): Promise<{ bridgeId: string; token: string }> {
   const r = await fetch(`${apiBase}/api/bridges/pair`, {
@@ -27,12 +40,15 @@ export async function pair(apiBase: string, code: string): Promise<{ bridgeId: s
 export async function heartbeat(
   apiBase: string,
   token: string,
-  cameras: CameraStatus[]
+  cameras: CameraStatus[],
+  discovered?: DiscoveredDevice[]
 ): Promise<{ intervalMs: number; cameras: DesiredCamera[] }> {
+  const body: Record<string, unknown> = { agentVersion: AGENT_VERSION, cameras };
+  if (discovered && discovered.length) body.discovered = discovered; // ONVIF-находки, если есть
   const r = await fetch(`${apiBase}/api/bridge/heartbeat`, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
-    body: JSON.stringify({ agentVersion: AGENT_VERSION, cameras }),
+    body: JSON.stringify(body),
   });
   if (r.status === 401) throw new RevokedError("bridge токен отозван (401)");
   if (!r.ok) throw new Error(`heartbeat: HTTP ${r.status}`);

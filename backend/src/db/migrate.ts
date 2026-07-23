@@ -123,6 +123,31 @@ ALTER TABLE cameras ADD COLUMN IF NOT EXISTS source_url text;
 ALTER TABLE cameras ADD COLUMN IF NOT EXISTS enabled    boolean NOT NULL DEFAULT true;
 ALTER TABLE cameras ADD COLUMN IF NOT EXISTS last_seen  timestamptz;
 CREATE INDEX IF NOT EXISTS cameras_bridge_idx ON cameras(bridge_id);
+
+-- ─── Этап 2: ONVIF-обнаружение и усыновление ───
+-- Камеры в ONVIF-режиме: агент резолвит RTSP по onvif_url+onvif_creds (зашифр. JSON {u,p}).
+ALTER TABLE cameras ADD COLUMN IF NOT EXISTS device_key  text;
+ALTER TABLE cameras ADD COLUMN IF NOT EXISTS onvif_url   text;
+ALTER TABLE cameras ADD COLUMN IF NOT EXISTS onvif_creds text;
+-- Идемпотентность усыновления: одну физическую камеру нельзя добавить дважды на один bridge.
+CREATE UNIQUE INDEX IF NOT EXISTS cameras_bridge_device_idx ON cameras(bridge_id, device_key) WHERE device_key IS NOT NULL;
+
+-- «Входящие» от агента: ONVIF-камеры, найденные в LAN (заполняются на heartbeat).
+CREATE TABLE IF NOT EXISTS discovered_cameras (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  bridge_id uuid NOT NULL REFERENCES bridges(id) ON DELETE CASCADE,
+  device_key text NOT NULL,
+  name text,
+  manufacturer text,
+  model text,
+  ip text,
+  onvif_url text NOT NULL,
+  camera_id uuid REFERENCES cameras(id) ON DELETE SET NULL,
+  dismissed_at timestamptz,
+  last_seen_at timestamptz NOT NULL DEFAULT now(),
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS discovered_bridge_device_idx ON discovered_cameras(bridge_id, device_key);
 `);
 
 console.log("migrate: ok");

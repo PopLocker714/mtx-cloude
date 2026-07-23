@@ -1,35 +1,46 @@
 import { config } from "./config";
 import { log, redact } from "./log";
+import { resolveOnvifRtsp } from "./discovery/onvif";
 import type { DesiredCamera, CameraStatus } from "./api";
 
 const isRtsp = (u: string) => /^rtsps?:\/\//i.test(u);
+// Ключ идентичности форвардера: источник (RTSP или ONVIF-xaddr) + ingest. Смена любого → пересоздание.
+const specKey = (cam: DesiredCamera) => (cam.sourceUrl || cam.onvif?.url || "") + "|" + cam.ingestUrl;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // Один ffmpeg-процесс на камеру + backoff-супервизор. ffmpeg запускается МАССИВОМ argv (без shell, LOW-2).
 class CameraForwarder {
   cameraId: string;
-  sourceUrl: string;
   ingestUrl: string;
   key: string;
+  private spec: DesiredCamera;
   private proc: Bun.Subprocess | null = null;
   private stopped = false;
   private backoffMs = 1000;
   private running = false;
 
   constructor(cam: DesiredCamera) {
+    this.spec = cam;
     this.cameraId = cam.cameraId;
-    this.sourceUrl = cam.sourceUrl;
     this.ingestUrl = cam.ingestUrl;
-    this.key = cam.sourceUrl + "|" + cam.ingestUrl;
+    this.key = specKey(cam);
     void this.run();
   }
 
-  private args(): string[] {
+  // RTSP-режим → готовый sourceUrl. ONVIF-режим → резолвим свежий RTSP через GetStreamUri
+  // (каждый реконнект — заново: устойчиво к смене URI, креды живут только в памяти агента).
+  private async resolveSource(): Promise<string> {
+    if (this.spec.sourceUrl) return this.spec.sourceUrl;
+    if (this.spec.onvif) return await resolveOnvifRtsp(this.spec.onvif);
+    throw new Error("нет источника (ни sourceUrl, ни onvif)");
+  }
+
+  private args(sourceUrl: string): string[] {
     return [
       "ffmpeg", "-hide_banner", "-nostats", "-loglevel", "warning",
       "-rtsp_transport", config.rtspTransport,
       "-timeout", String(config.inputTimeoutSec * 1_000_000), // RTSP socket-таймаут (мкс): роняет ffmpeg на залипшем входе (M-2)
-      "-i", this.sourceUrl,
+      "-i", sourceUrl,
       "-c:v", "copy", "-an", // video-only remux; аудио — позже
       "-f", "rtsp", "-rtsp_transport", "tcp", this.ingestUrl,
     ];
@@ -61,12 +72,15 @@ class CameraForwarder {
     while (!this.stopped) {
       const started = Date.now();
       try {
-        this.proc = Bun.spawn(this.args(), { stdout: "ignore", stderr: "pipe" });
+        // ONVIF-резолв ДО запуска ffmpeg: если камера/креды недоступны — не плодим мёртвые процессы.
+        const sourceUrl = await this.resolveSource();
+        if (this.stopped) break;
+        this.proc = Bun.spawn(this.args(sourceUrl), { stdout: "ignore", stderr: "pipe" });
         if (this.proc.stderr) this.pipeStderr(this.proc.stderr as ReadableStream<Uint8Array>);
-        log.info("forward: старт", { cameraId: this.cameraId });
+        log.info("forward: старт", { cameraId: this.cameraId, mode: this.spec.onvif ? "onvif" : "rtsp" });
         await this.proc.exited;
       } catch (e) {
-        log.error("forward: не удалось запустить ffmpeg", { cameraId: this.cameraId, err: String(e) });
+        log.error("forward: не удалось запустить/резолвить источник", { cameraId: this.cameraId, err: redact(String(e)) });
       }
       this.proc = null;
       if (this.stopped) break;
@@ -102,8 +116,10 @@ export class ForwarderManager {
     const want = new Map<string, DesiredCamera>();
     for (const cam of desired) {
       if (!cam.enabled) continue;
-      if (!isRtsp(cam.sourceUrl)) {
-        log.warn("forward: пропускаю не-rtsp источник", { cameraId: cam.cameraId });
+      // Источник валиден, если это RTSP (Этап 1) ИЛИ ONVIF-дескриптор (Этап 2).
+      const ok = (cam.sourceUrl && isRtsp(cam.sourceUrl)) || !!cam.onvif?.url;
+      if (!ok) {
+        log.warn("forward: пропускаю камеру без валидного источника", { cameraId: cam.cameraId });
         continue;
       }
       want.set(cam.cameraId, cam);
@@ -111,7 +127,7 @@ export class ForwarderManager {
     // остановить лишние/выключенные/изменившиеся
     for (const [id, fwd] of this.map) {
       const w = want.get(id);
-      if (!w || w.sourceUrl + "|" + w.ingestUrl !== fwd.key) {
+      if (!w || specKey(w) !== fwd.key) {
         fwd.stop();
         this.map.delete(id);
         log.info("forward: стоп", { cameraId: id });

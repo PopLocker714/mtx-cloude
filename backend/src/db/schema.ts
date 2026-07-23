@@ -1,4 +1,5 @@
-import { pgTable, text, timestamp, boolean, index, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, index, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // ─────────────────────────────────────────────────────────────
 // Better Auth core-таблицы (имена/поля фиксированы контрактом BA).
@@ -100,13 +101,49 @@ export const cameras = pgTable(
     name: text("name").notNull().default("Камера"),
     path: text("path").notNull().unique(),
     publishToken: text("publish_token").notNull(),
-    // sourceUrl — RTSP камеры с логином/паролем, зашифрован AES-256-GCM (iv.tag.ct base64). NULL для ручного flow.
+    // sourceUrl — RTSP камеры с логином/паролем, зашифрован AES-256-GCM (iv.tag.ct base64). NULL для ONVIF/ручного flow.
     sourceUrl: text("source_url"),
+    // ── ONVIF-режим (Этап 2): агент резолвит RTSP через GetStreamUri по этим полям ──
+    // deviceKey — стабильный ONVIF-urn устройства (ключ дедупа при повторном обнаружении).
+    deviceKey: text("device_key"),
+    // onvifUrl — xaddr (device_service URL) камеры; onvifCreds — зашифрованный JSON {u,p}.
+    onvifUrl: text("onvif_url"),
+    onvifCreds: text("onvif_creds"),
     enabled: boolean("enabled").notNull().default(true), // desired-state для агента
     lastSeen: timestamp("last_seen", { withTimezone: true }), // последний heartbeat с этой камерой; online деривируем
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => ({ byUser: index("cameras_user_idx").on(t.userId), byBridge: index("cameras_bridge_idx").on(t.bridgeId) })
+  (t) => ({
+    byUser: index("cameras_user_idx").on(t.userId),
+    byBridge: index("cameras_bridge_idx").on(t.bridgeId),
+    // Идемпотентность усыновления: одну физическую ONVIF-камеру нельзя добавить дважды на один bridge.
+    byDevice: uniqueIndex("cameras_bridge_device_idx").on(t.bridgeId, t.deviceKey).where(sql`device_key IS NOT NULL`),
+  })
+);
+
+// ─────────────────────────────────────────────────────────────
+// discovered_cameras — «входящие» от агента: ONVIF-камеры, найденные в LAN.
+// Заполняется на heartbeat, показывается в ЛК. Усыновление → строка cameras + cameraId здесь.
+// ─────────────────────────────────────────────────────────────
+export const discoveredCameras = pgTable(
+  "discovered_cameras",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    bridgeId: uuid("bridge_id").notNull().references(() => bridges.id, { onDelete: "cascade" }),
+    deviceKey: text("device_key").notNull(), // ONVIF urn (EndpointReference/Address)
+    name: text("name"),
+    manufacturer: text("manufacturer"),
+    model: text("model"),
+    ip: text("ip"),
+    onvifUrl: text("onvif_url").notNull(), // xaddr
+    cameraId: uuid("camera_id").references(() => cameras.id, { onDelete: "set null" }), // усыновлена → id камеры
+    dismissedAt: timestamp("dismissed_at", { withTimezone: true }), // пользователь скрыл
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byBridgeDevice: uniqueIndex("discovered_bridge_device_idx").on(t.bridgeId, t.deviceKey),
+  })
 );
 
 export const viewTokens = pgTable(

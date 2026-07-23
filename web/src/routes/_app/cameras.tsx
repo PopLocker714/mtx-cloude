@@ -1,23 +1,35 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Plus, Video, Link2, Circle, Trash2 } from "lucide-react";
-import { listCameras, deleteCamera, type Camera } from "@/lib/api";
+import { Plus, Video, Link2, Circle, Trash2, Radar, X } from "lucide-react";
+import {
+  listCameras,
+  deleteCamera,
+  listDiscovered,
+  dismissDiscovered,
+  type Camera,
+  type DiscoveredCamera,
+} from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ConnectCameraDialog } from "@/components/connect-camera-dialog";
+import { AdoptCameraDialog } from "@/components/adopt-camera-dialog";
 
 export const Route = createFileRoute("/_app/cameras")({ component: CamerasPage });
 
 function CamerasPage() {
   const [cameras, setCameras] = useState<Camera[] | null>(null);
+  const [discovered, setDiscovered] = useState<DiscoveredCamera[]>([]);
+  const [adoptTarget, setAdoptTarget] = useState<DiscoveredCamera | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [connId, setConnId] = useState<string | null>(null);
 
   async function refresh() {
     try {
-      setCameras(await listCameras());
+      const [cams, disc] = await Promise.all([listCameras(), listDiscovered().catch(() => [])]);
+      setCameras(cams);
+      setDiscovered(disc);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -36,6 +48,47 @@ function CamerasPage() {
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
+
+      {/* Найденные агентом в сети ONVIF-камеры — подключение в один клик (ввести только пароль) */}
+      {discovered.length > 0 && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Radar className="size-4 text-primary" /> Найдены камеры в вашей сети ({discovered.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableBody>
+                {discovered.map((d) => (
+                  <TableRow key={d.id}>
+                    <TableCell className="font-medium">
+                      {d.name || d.model || "ONVIF-камера"}
+                      <span className="block text-xs font-normal text-muted-foreground">
+                        {[d.manufacturer, d.model].filter(Boolean).join(" ")}
+                        {d.ip ? ` · ${d.ip}` : ""} · {d.bridgeName}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button size="sm" onClick={() => setAdoptTarget(d)}>
+                        <Plus className="size-4" /> Подключить
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Скрыть"
+                        onClick={() => dismissDiscovered(d.id).then(refresh)}
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {cameras === null ? (
         <p className="text-muted-foreground">Загрузка…</p>
@@ -113,6 +166,9 @@ function CamerasPage() {
 
       {/* Данные подключения существующей камеры */}
       <ConnectCameraDialog open={connId !== null} onOpenChange={(v) => !v && setConnId(null)} existingId={connId ?? undefined} />
+
+      {/* Усыновление найденной ONVIF-камеры */}
+      <AdoptCameraDialog camera={adoptTarget} onOpenChange={(v) => !v && setAdoptTarget(null)} onAdopted={refresh} />
     </div>
   );
 }

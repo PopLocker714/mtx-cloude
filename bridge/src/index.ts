@@ -1,10 +1,30 @@
 import { config, requireApiBase, AGENT_VERSION } from "./config";
 import { log } from "./log";
 import { loadState, saveState, wipeState, type State } from "./state";
-import { pair, heartbeat, RevokedError } from "./api";
+import { pair, heartbeat, RevokedError, type DiscoveredDevice } from "./api";
 import { ForwarderManager } from "./forward";
+import { probe } from "./discovery/wsdiscovery";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Периодический ONVIF-скан LAN. Находки отдаём через onFound; heartbeat приложит их к следующему beat.
+async function runDiscovery(onFound: (d: DiscoveredDevice[]) => void, stopped: () => boolean) {
+  await sleep(3000); // дать агенту подняться после старта/привязки
+  while (!stopped()) {
+    try {
+      const matches = await probe({ timeoutMs: 4000 });
+      if (matches.length) {
+        log.info("discovery: найдено ONVIF-устройств", { count: matches.length });
+        onFound(matches.map((m) => ({ deviceKey: m.deviceKey, onvifUrl: m.onvifUrl, ip: m.ip, name: m.name, model: m.hardware })));
+      } else {
+        log.debug("discovery: ONVIF-камеры не найдены");
+      }
+    } catch (e) {
+      log.warn("discovery: ошибка сканирования", { err: String(e) });
+    }
+    await sleep(config.discoveryIntervalSec * 1000);
+  }
+}
 
 async function ensurePaired(): Promise<State> {
   const existing = await loadState();
@@ -40,18 +60,34 @@ async function main() {
   process.on("SIGTERM", shutdown);
   process.on("SIGINT", shutdown);
 
-  // Начальная реконсиляция из GET /cameras (быстрее, чем ждать первый heartbeat).
-  // Дальше desired-state приходит в ответе heartbeat.
+  // ONVIF-обнаружение: находки копятся в pendingDiscovered и уходят в теле heartbeat.
+  let pendingDiscovered: DiscoveredDevice[] = [];
+  let discoveredDirty = false;
+  if (config.discoveryEnabled) {
+    void runDiscovery(
+      (d) => {
+        pendingDiscovered = d;
+        discoveredDirty = true;
+      },
+      () => stopping
+    );
+  }
+
+  // Desired-state приходит в ответе heartbeat.
   let intervalMs = config.heartbeatSec * 1000;
   let backoffMs = 0;
 
   while (!stopping) {
+    // Снимок находок берём и гасим флаг СИНХРОННО до await (без гонки с колбэком discovery).
+    const toSend = discoveredDirty ? pendingDiscovered : undefined;
+    discoveredDirty = false;
     try {
-      const res = await heartbeat(state.apiBase, state.token, manager.statuses());
+      const res = await heartbeat(state.apiBase, state.token, manager.statuses(), toSend);
       manager.reconcile(res.cameras); // применяем ТОЛЬКО при успешном 200 (M-5)
       intervalMs = res.intervalMs;
       backoffMs = 0;
     } catch (e) {
+      if (toSend) discoveredDirty = true; // heartbeat не прошёл — переотправим находки следующим beat
       if (e instanceof RevokedError) {
         log.error("bridge: токен отозван — останавливаемся и стираем привязку");
         manager.stopAll();

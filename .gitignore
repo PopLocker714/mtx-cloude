@@ -4,5 +4,11 @@
 # локальные записи, если смонтируешь папкой вместо volume
 recordings/
 
-# backend
-backend/node_modules/
+# зависимости (любой пакет)
+node_modules/
+**/node_modules/
+
+# сборка веба
+web/.output/
+web/.nitro/
+web/dist/

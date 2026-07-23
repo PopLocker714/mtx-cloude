@@ -61,6 +61,26 @@ export const deleteBridge = (id: string) => api(`/bridges/${id}`, { method: "DEL
 export const createViewToken = (cameraId?: string): Promise<{ token: string; ttlMs: number }> =>
   api("/cameras/view-token", { method: "POST", body: JSON.stringify(cameraId ? { cameraId } : {}) });
 
+// --- ONVIF-обнаружение (Этап 2): камеры, найденные агентом в LAN ---
+export type DiscoveredCamera = {
+  id: string;
+  bridgeId: string;
+  bridgeName: string;
+  name: string | null;
+  manufacturer: string | null;
+  model: string | null;
+  ip: string | null;
+  lastSeenAt: string;
+};
+export const listDiscovered = (): Promise<DiscoveredCamera[]> => api("/discovered");
+// Усыновление: юзер вводит только логин/пароль камеры; RTSP резолвит агент через ONVIF.
+export const adoptDiscovered = (
+  id: string,
+  opts: { name?: string; username: string; password: string }
+): Promise<{ id: string; name: string; path: string }> =>
+  api(`/discovered/${id}/adopt`, { method: "POST", body: JSON.stringify(opts) });
+export const dismissDiscovered = (id: string) => api(`/discovered/${id}`, { method: "DELETE" });
+
 // --- Админ ---
 export type AdminCamera = { id: string; name: string; path: string; createdAt: string; ownerEmail: string | null };
 export type AuditEntry = {
