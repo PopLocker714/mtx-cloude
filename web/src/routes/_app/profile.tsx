@@ -1,13 +1,69 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { KeyRound } from "lucide-react";
+import { useEffect, useState } from "react";
+import { KeyRound, Send, Check } from "lucide-react";
 import { authClient, useSession } from "@/lib/auth-client";
+import { getTelegramLink, unlinkTelegram, type TelegramStatus } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_app/profile")({ component: ProfilePage });
+
+// Привязка Telegram для уведомлений о движении (Этап 3).
+function TelegramCard() {
+  const [st, setSt] = useState<TelegramStatus | null>(null);
+
+  function load() {
+    getTelegramLink()
+      .then(setSt)
+      .catch(() => setSt(null));
+  }
+  useEffect(load, []);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Send className="size-4" /> Telegram-уведомления
+        </CardTitle>
+        <CardDescription>Алерты о движении на камерах приходят в Telegram.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {st === null ? (
+          <p className="text-sm text-muted-foreground">Загрузка…</p>
+        ) : st.linked ? (
+          <div className="space-y-3">
+            <p className="flex items-center gap-2 text-sm text-green-600">
+              <Check className="size-4" /> Telegram подключён.
+            </p>
+            <Button variant="outline" size="sm" onClick={() => unlinkTelegram().then(load)}>
+              Отвязать
+            </Button>
+          </div>
+        ) : !st.configured ? (
+          <p className="text-sm text-muted-foreground">
+            Бот ещё не настроен на сервере. Уведомления заработают после подключения бота администратором.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Нажмите кнопку, затем <b>Start</b> в открывшемся чате с ботом — аккаунт привяжется автоматически.
+            </p>
+            <Button asChild size="sm">
+              <a href={st.url} target="_blank" rel="noreferrer">
+                <Send className="size-4" /> Подключить Telegram
+              </a>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={load} className="ml-2">
+              Я нажал Start — проверить
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 function ProfilePage() {
   const { data: session } = useSession();
@@ -51,6 +107,8 @@ function ProfilePage() {
           <div><span className="text-muted-foreground">Имя:</span> {session?.user?.name || "—"}</div>
         </CardContent>
       </Card>
+
+      <TelegramCard />
 
       <Card>
         <CardHeader>

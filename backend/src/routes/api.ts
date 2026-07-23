@@ -5,6 +5,9 @@ import {
   randomToken, pairingCode, cameraPath, currentUser,
   bridgeToken, hashToken, ingestUrl, isRtspUrl, isOnline, encryptSecret, rateLimit,
 } from "../lib";
+import { setRecording } from "../mediamtx";
+import { forgetRecordState } from "../reconcile";
+import { telegramLink, telegramConfigured } from "../telegram";
 
 export const api = new Hono();
 
@@ -164,7 +167,9 @@ api.get("/cameras", async (c) => {
       enabled: r.enabled,
       online: isOnline(r.lastSeen) && r.enabled,
       lastSeen: r.lastSeen,
-      viaBridge: !!r.sourceUrl,
+      viaBridge: !!r.sourceUrl || !!r.onvifUrl,
+      recordMode: r.recordMode,
+      notifyEnabled: r.notifyEnabled,
     }))
   );
 });
@@ -178,10 +183,18 @@ api.patch("/cameras/:id", async (c) => {
   const [cam] = await db.select().from(schema.cameras).where(eq(schema.cameras.id, id)).limit(1);
   if (!cam || cam.userId !== u.id) return c.json({ error: "камера не найдена" }, 404);
   const body = await c.req.json().catch(() => ({}));
-  const patch: { name?: string; enabled?: boolean } = {};
+  const patch: { name?: string; enabled?: boolean; recordMode?: string; notifyEnabled?: boolean } = {};
   if (typeof body.name === "string") patch.name = cleanName(body.name, cam.name);
   if (typeof body.enabled === "boolean") patch.enabled = body.enabled;
+  if (body.recordMode === "continuous" || body.recordMode === "motion") patch.recordMode = body.recordMode;
+  if (typeof body.notifyEnabled === "boolean") patch.notifyEnabled = body.notifyEnabled;
   if (Object.keys(patch).length) await db.update(schema.cameras).set(patch).where(eq(schema.cameras.id, id));
+
+  // Смена режима записи → синхронизируем MediaMTX (иначе рассинхрон до следующего движения).
+  if (patch.recordMode && patch.recordMode !== cam.recordMode) {
+    forgetRecordState(cam.path); // reconcile переприменит гейт
+    if (patch.recordMode === "continuous") await setRecording(cam.path, true); // вернуть непрерывную запись сразу
+  }
   return c.json({ ok: true });
 });
 
@@ -315,6 +328,47 @@ api.delete("/discovered/:id", async (c) => {
   const [br] = await db.select().from(schema.bridges).where(eq(schema.bridges.id, d.bridgeId)).limit(1);
   if (!br || br.userId !== u.id) return c.json({ error: "не найдено" }, 404);
   await db.update(schema.discoveredCameras).set({ dismissedAt: new Date() }).where(eq(schema.discoveredCameras.id, id));
+  return c.json({ ok: true });
+});
+
+// ─── События движения + уведомления (Этап 3) ───
+
+// --- Таймлайн событий движения камеры (владелец/админ) ---
+api.get("/cameras/:id/events", async (c) => {
+  const u = await requireUser(c);
+  if (!u) return c.json({ error: "нужна авторизация" }, 401);
+  const id = c.req.param("id");
+  if (!UUID_RE.test(id)) return c.json({ error: "неверный id" }, 400);
+  const [cam] = await db.select().from(schema.cameras).where(eq(schema.cameras.id, id)).limit(1);
+  if (!cam || (cam.userId !== u.id && u.role !== "admin")) return c.json({ error: "камера не найдена" }, 404);
+  const rows = await db
+    .select({ id: schema.events.id, kind: schema.events.kind, startedAt: schema.events.startedAt, endedAt: schema.events.endedAt })
+    .from(schema.events)
+    .where(eq(schema.events.cameraId, id))
+    .orderBy(desc(schema.events.startedAt))
+    .limit(100);
+  return c.json(rows);
+});
+
+// --- Telegram: получить ссылку привязки (или статус «уже привязан») ---
+api.get("/telegram/link", async (c) => {
+  const u = await requireUser(c);
+  if (!u) return c.json({ error: "нужна авторизация" }, 401);
+  const [row] = await db.select().from(schema.user).where(eq(schema.user.id, u.id)).limit(1);
+  if (row?.telegramChatId) return c.json({ linked: true, configured: telegramConfigured() });
+  let code = row?.telegramLinkCode;
+  if (!code) {
+    code = randomToken(8);
+    await db.update(schema.user).set({ telegramLinkCode: code }).where(eq(schema.user.id, u.id));
+  }
+  return c.json({ linked: false, configured: telegramConfigured(), url: telegramLink(code), code });
+});
+
+// --- Telegram: отвязать ---
+api.delete("/telegram", async (c) => {
+  const u = await requireUser(c);
+  if (!u) return c.json({ error: "нужна авторизация" }, 401);
+  await db.update(schema.user).set({ telegramChatId: null, telegramLinkCode: null }).where(eq(schema.user.id, u.id));
   return c.json({ ok: true });
 });
 

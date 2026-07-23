@@ -18,6 +18,9 @@ export const user = pgTable("user", {
   banExpires: timestamp("ban_expires", { withTimezone: true }),
   // Момент принятия пользовательского соглашения/политики (ставится при регистрации).
   termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
+  // Telegram для уведомлений о движении (Этап 3). Привязка по deep-link коду → chatId.
+  telegramChatId: text("telegram_chat_id"),
+  telegramLinkCode: text("telegram_link_code"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -110,6 +113,11 @@ export const cameras = pgTable(
     onvifUrl: text("onvif_url"),
     onvifCreds: text("onvif_creds"),
     enabled: boolean("enabled").notNull().default(true), // desired-state для агента
+    // ── Умная запись по движению (Этап 3) ──
+    // recordMode: "continuous" — писать 24/7 (default, безопасно); "motion" — только при движении.
+    recordMode: text("record_mode").notNull().default("continuous"),
+    notifyEnabled: boolean("notify_enabled").notNull().default(false), // Telegram-алерт на движение
+    lastMotionAt: timestamp("last_motion_at", { withTimezone: true }), // последний пинг движения; гейт записи деривируем
     lastSeen: timestamp("last_seen", { withTimezone: true }), // последний heartbeat с этой камерой; online деривируем
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -143,6 +151,27 @@ export const discoveredCameras = pgTable(
   },
   (t) => ({
     byBridgeDevice: uniqueIndex("discovered_bridge_device_idx").on(t.bridgeId, t.deviceKey),
+  })
+);
+
+// ─────────────────────────────────────────────────────────────
+// events — события движения (Этап 3). Открытое событие = endedAt IS NULL.
+// Питает таймлайн в ЛК (клик по событию → воспроизведение сегмента архива).
+// ─────────────────────────────────────────────────────────────
+export const events = pgTable(
+  "events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    cameraId: uuid("camera_id").notNull().references(() => cameras.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }), // денорм. для запросов ЛК
+    kind: text("kind").notNull().default("motion"),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    endedAt: timestamp("ended_at", { withTimezone: true }), // NULL = ещё идёт
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byCamera: index("events_camera_idx").on(t.cameraId, t.startedAt),
+    byUser: index("events_user_idx").on(t.userId),
   })
 );
 

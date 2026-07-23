@@ -148,6 +148,25 @@ CREATE TABLE IF NOT EXISTS discovered_cameras (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE UNIQUE INDEX IF NOT EXISTS discovered_bridge_device_idx ON discovered_cameras(bridge_id, device_key);
+
+-- ─── Этап 3: умная запись по движению + уведомления ───
+ALTER TABLE cameras ADD COLUMN IF NOT EXISTS record_mode    text NOT NULL DEFAULT 'continuous'; -- 'continuous' | 'motion'
+ALTER TABLE cameras ADD COLUMN IF NOT EXISTS notify_enabled boolean NOT NULL DEFAULT false;
+ALTER TABLE cameras ADD COLUMN IF NOT EXISTS last_motion_at timestamptz;
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS telegram_chat_id   text;
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS telegram_link_code text;
+
+CREATE TABLE IF NOT EXISTS events (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  camera_id uuid NOT NULL REFERENCES cameras(id) ON DELETE CASCADE,
+  user_id text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  kind text NOT NULL DEFAULT 'motion',
+  started_at timestamptz NOT NULL DEFAULT now(),
+  ended_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS events_camera_idx ON events(camera_id, started_at);
+CREATE INDEX IF NOT EXISTS events_user_idx ON events(user_id);
 `);
 
 console.log("migrate: ok");

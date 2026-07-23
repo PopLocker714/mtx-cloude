@@ -32,6 +32,13 @@ services:
       ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
       STUB_AUTH: "${STUB_AUTH}"
       NODE_ENV: "production"
+      # Этап 3 — умная запись по движению: backend гейтит запись через Control API MediaMTX.
+      MTX_API_URL: "http://mediamtx:9997"
+      # Telegram-уведомления о движении (опционально; пусто → уведомления просто не шлются).
+      # Создайте бота у @BotFather, задайте webhook на https://api.<домен>/api/telegram/webhook.
+      TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN}"
+      TELEGRAM_BOT_USERNAME: "${TELEGRAM_BOT_USERNAME}"
+      TELEGRAM_WEBHOOK_SECRET: "${TELEGRAM_WEBHOOK_SECRET}"
     # Порт 9998 наружу НЕ публикуем — backend доступен MediaMTX'у и (позже) ЛК изнутри сети.
     # ЛК/API откроем через Traefik на следующем этапе.
 

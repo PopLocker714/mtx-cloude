@@ -19,6 +19,9 @@ export function hashToken(raw: string): string {
 // --- online-деривация bridge/камеры по heartbeat ---
 export const HEARTBEAT_MS = 30_000;
 export const BRIDGE_STALE_MS = 90_000;
+
+// --- Движение (Этап 3): запись и открытое событие держатся столько после последнего пинга ---
+export const MOTION_COOLDOWN_MS = Number(process.env.MOTION_COOLDOWN_MS || 25_000);
 export function isOnline(lastSeen?: Date | null): boolean {
   return !!lastSeen && Date.now() - lastSeen.getTime() < BRIDGE_STALE_MS;
 }

@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Play, RefreshCw, Radio, Film, Loader2, WifiOff } from "lucide-react";
-import { getConnection, createViewToken, listArchive, fetchArchiveClip, type ArchiveSegment } from "@/lib/api";
+import { Play, RefreshCw, Radio, Film, Loader2, WifiOff, Zap } from "lucide-react";
+import {
+  getConnection,
+  createViewToken,
+  listArchive,
+  fetchArchiveClip,
+  listEvents,
+  type ArchiveSegment,
+  type MotionEvent,
+} from "@/lib/api";
 import { LIVE_BASE } from "@/lib/api-base";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,7 +86,7 @@ export function CameraView({ cameraId }: { cameraId: string }) {
       <h1 className="text-2xl font-semibold">{name}</h1>
       <div className="grid gap-6 lg:grid-cols-2">
         <LiveCard path={path} token={token} />
-        <ArchiveCard path={path} token={token} />
+        <ArchiveCard cameraId={cameraId} path={path} token={token} />
       </div>
     </div>
   );
@@ -158,17 +166,26 @@ function LiveCard({ path, token }: { path: string; token: string }) {
   );
 }
 
-function ArchiveCard({ path, token }: { path: string; token: string }) {
+function eventDuration(ev: MotionEvent): number {
+  const end = ev.endedAt ? new Date(ev.endedAt).getTime() : Date.now();
+  const sec = (end - new Date(ev.startedAt).getTime()) / 1000;
+  return Math.min(Math.max(Math.ceil(sec) + 3, 8), 600); // +3с хвоста, в пределах 8с…10мин
+}
+
+function ArchiveCard({ cameraId, path, token }: { cameraId: string; path: string; token: string }) {
   const [segments, setSegments] = useState<ArchiveSegment[] | null>(null);
+  const [events, setEvents] = useState<MotionEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<string | null>(null); // start выбранной записи
+  const [selected, setSelected] = useState<string | null>(null); // ключ выбранного клипа
   const [clipUrl, setClipUrl] = useState<string | null>(null); // blob-URL текущего клипа
   const [loadingClip, setLoadingClip] = useState<string | null>(null);
 
   async function refresh() {
     setError(null);
     try {
-      setSegments(await listArchive(path, token));
+      const [segs, evs] = await Promise.all([listArchive(path, token), listEvents(cameraId).catch(() => [])]);
+      setSegments(segs);
+      setEvents(evs);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -176,22 +193,24 @@ function ArchiveCard({ path, token }: { path: string; token: string }) {
   useEffect(() => {
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [path, token]);
+  }, [cameraId, path, token]);
 
-  async function play(seg: ArchiveSegment) {
-    setLoadingClip(seg.start);
+  // Общий плеер: и записи, и события открывают клип по времени.
+  async function playClip(startISO: string, durationSec: number, key: string) {
+    setLoadingClip(key);
     setError(null);
     try {
-      const dur = Math.min(Math.ceil(seg.duration), 600); // максимум 10 минут за раз
-      const url = await fetchArchiveClip(path, seg.start, dur, token);
-      setSelected(seg.start);
-      setClipUrl(url); // video монтируется с этим src и автоплеится (muted)
+      const url = await fetchArchiveClip(path, startISO, durationSec, token);
+      setSelected(key);
+      setClipUrl(url);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setLoadingClip(null);
     }
   }
+  const play = (s: ArchiveSegment) => playClip(s.start, Math.min(Math.ceil(s.duration), 600), s.start);
+  const playEvent = (ev: MotionEvent) => playClip(ev.startedAt, eventDuration(ev), "ev:" + ev.id);
 
   const span = segments && segments.length ? timelineSpan(segments) : null;
 
@@ -213,7 +232,7 @@ function ArchiveCard({ path, token }: { path: string; token: string }) {
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-muted text-muted-foreground">
               <Film className="size-8 opacity-40" />
-              <span className="text-sm">Выберите запись ниже для просмотра</span>
+              <span className="text-sm">Выберите событие или запись ниже</span>
             </div>
           )}
           {loadingClip && (
@@ -224,6 +243,42 @@ function ArchiveCard({ path, token }: { path: string; token: string }) {
         </div>
 
         {error && <p className="text-xs text-destructive">{error}</p>}
+
+        {/* События движения — приоритетная навигация: сразу к «что произошло» */}
+        {events.length > 0 && (
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 text-sm font-medium">
+              <Zap className="size-4 text-primary" /> События движения
+            </div>
+            <div className="max-h-40 overflow-y-auto rounded-md border divide-y">
+              {events.map((ev) => {
+                const key = "ev:" + ev.id;
+                const active = selected === key;
+                return (
+                  <button
+                    key={ev.id}
+                    onClick={() => playEvent(ev)}
+                    className={cn(
+                      "flex w-full items-center gap-3 px-3 py-2 text-sm text-left transition hover:bg-muted cursor-pointer",
+                      active && "bg-primary/10"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "flex size-7 shrink-0 items-center justify-center rounded-full",
+                        active ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
+                      )}
+                    >
+                      {loadingClip === key ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />}
+                    </span>
+                    <span className="flex-1 font-medium">{fmt(new Date(ev.startedAt))}</span>
+                    <span className="text-xs text-muted-foreground">{ev.endedAt ? "движение" : "идёт…"}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {segments === null ? (
           <p className="text-xs text-muted-foreground">Загрузка архива…</p>
@@ -254,8 +309,8 @@ function ArchiveCard({ path, token }: { path: string; token: string }) {
               </div>
             )}
 
-            {/* Список записей — явно кликабельный */}
-            <div className="max-h-48 overflow-y-auto rounded-md border divide-y">
+            {/* Все записи — явно кликабельный список */}
+            <div className="max-h-40 overflow-y-auto rounded-md border divide-y">
               {segments.map((s) => {
                 const active = selected === s.start;
                 return (
@@ -281,7 +336,6 @@ function ArchiveCard({ path, token }: { path: string; token: string }) {
                 );
               })}
             </div>
-            <p className="text-xs text-muted-foreground">Нажмите на запись, чтобы посмотреть её в плеере выше.</p>
           </>
         )}
       </CardContent>

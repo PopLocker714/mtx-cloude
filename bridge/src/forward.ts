@@ -1,11 +1,11 @@
 import { config } from "./config";
 import { log, redact } from "./log";
-import { resolveOnvifRtsp } from "./discovery/onvif";
+import { resolveSource, sourceKey } from "./source";
 import type { DesiredCamera, CameraStatus } from "./api";
 
 const isRtsp = (u: string) => /^rtsps?:\/\//i.test(u);
 // Ключ идентичности форвардера: источник (RTSP или ONVIF-xaddr) + ingest. Смена любого → пересоздание.
-const specKey = (cam: DesiredCamera) => (cam.sourceUrl || cam.onvif?.url || "") + "|" + cam.ingestUrl;
+const specKey = (cam: DesiredCamera) => sourceKey(cam) + "|" + cam.ingestUrl;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // Один ffmpeg-процесс на камеру + backoff-супервизор. ffmpeg запускается МАССИВОМ argv (без shell, LOW-2).
@@ -30,9 +30,7 @@ class CameraForwarder {
   // RTSP-режим → готовый sourceUrl. ONVIF-режим → резолвим свежий RTSP через GetStreamUri
   // (каждый реконнект — заново: устойчиво к смене URI, креды живут только в памяти агента).
   private async resolveSource(): Promise<string> {
-    if (this.spec.sourceUrl) return this.spec.sourceUrl;
-    if (this.spec.onvif) return await resolveOnvifRtsp(this.spec.onvif);
-    throw new Error("нет источника (ни sourceUrl, ни onvif)");
+    return resolveSource(this.spec);
   }
 
   private args(sourceUrl: string): string[] {

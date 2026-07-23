@@ -1,8 +1,9 @@
 import { config, requireApiBase, AGENT_VERSION } from "./config";
 import { log } from "./log";
 import { loadState, saveState, wipeState, type State } from "./state";
-import { pair, heartbeat, RevokedError, type DiscoveredDevice } from "./api";
+import { pair, heartbeat, reportMotion, RevokedError, type DiscoveredDevice } from "./api";
 import { ForwarderManager } from "./forward";
+import { MotionManager } from "./motion";
 import { probe } from "./discovery/wsdiscovery";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -48,6 +49,8 @@ async function main() {
   log.info("oko-bridge запускается", { version: AGENT_VERSION });
   const state = await ensurePaired();
   const manager = new ForwarderManager();
+  // Детекторы движения пингуют облако; событие/запись/уведомление — на стороне backend.
+  const motion = new MotionManager((cameraId) => reportMotion(state.apiBase, state.token, cameraId));
 
   let stopping = false;
   const shutdown = () => {
@@ -55,6 +58,7 @@ async function main() {
     stopping = true;
     log.info("bridge: остановка (SIGTERM)");
     manager.stopAll();
+    motion.stopAll();
     setTimeout(() => process.exit(0), 500);
   };
   process.on("SIGTERM", shutdown);
@@ -84,6 +88,7 @@ async function main() {
     try {
       const res = await heartbeat(state.apiBase, state.token, manager.statuses(), toSend);
       manager.reconcile(res.cameras); // применяем ТОЛЬКО при успешном 200 (M-5)
+      motion.reconcile(res.cameras); // детекторы движения — из того же desired-state
       intervalMs = res.intervalMs;
       backoffMs = 0;
     } catch (e) {

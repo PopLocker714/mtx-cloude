@@ -13,6 +13,7 @@ export type DesiredCamera = {
   ingestUrl: string;
   sourceUrl?: string;
   onvif?: { url: string; username: string; password: string };
+  motion?: boolean; // детектить движение (запись по движению или включены уведомления) — Этап 3
 };
 export type CameraStatus = { cameraId: string; status: string };
 // Найденное в LAN ONVIF-устройство (агент → облако, прикладывается к heartbeat).
@@ -35,6 +36,19 @@ export async function pair(apiBase: string, code: string): Promise<{ bridgeId: s
   const j = (await r.json()) as { bridgeId: string; token: string };
   if (!j.token) throw new Error("pair: нет токена в ответе");
   return j;
+}
+
+// Пинг движения (Этап 3): best-effort, облако создаёт событие/включает запись/уведомляет.
+export async function reportMotion(apiBase: string, token: string, cameraId: string): Promise<void> {
+  try {
+    await fetch(`${apiBase}/api/bridge/motion`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+      body: JSON.stringify({ cameraId }),
+    });
+  } catch {
+    /* пинг движения не критичен — молча пропускаем */
+  }
 }
 
 export async function heartbeat(

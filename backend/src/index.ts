@@ -6,10 +6,15 @@ import { mediamtxAuth } from "./routes/mediamtx-auth";
 import { api } from "./routes/api";
 import { bridgeApi } from "./routes/bridge";
 import { stubAuth } from "./routes/stub-auth";
+import { telegramWebhook } from "./routes/telegram-webhook";
+import { startReconcile } from "./reconcile";
 
 // Бутстрап при старте: админ из env + fail-closed проверка ключа шифрования creds.
 await ensureAdmin();
 await ensureBridgeKey();
+
+// Цикл записи/событий по движению (Этап 3): гейт записи MediaMTX + закрытие событий.
+startReconcile();
 
 const app = new Hono();
 
@@ -39,6 +44,9 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 // Внешний авторизатор MediaMTX (только из docker-сети, наружу не публикуется).
 app.route("/internal/mediamtx-auth", mediamtxAuth);
+
+// Публичный Telegram-webhook (без сессии) — монтируем ДО /api, путь специфичнее.
+app.route("/api/telegram/webhook", telegramWebhook);
 
 // API bridge-агента (Bearer okb_…) — монтируем ДО /api, путь более специфичный.
 app.route("/api/bridge", bridgeApi);

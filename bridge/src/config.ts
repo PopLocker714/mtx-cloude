@@ -1,5 +1,5 @@
 // Конфиг агента из env. На первом старте нужен OKO_API + OKO_PAIR_CODE (или уже сохранённый state).
-export const AGENT_VERSION = "0.2.0"; // Этап 2: ONVIF-автообнаружение камер в LAN
+export const AGENT_VERSION = "0.3.0"; // Этап 3: детекция движения (умная запись + уведомления)
 
 function req(name: string): string {
   const v = process.env[name];
@@ -18,6 +18,9 @@ export const config = {
   // ONVIF-обнаружение камер в LAN (Этап 2). OKO_DISCOVERY=0 отключает.
   discoveryEnabled: process.env.OKO_DISCOVERY !== "0",
   discoveryIntervalSec: Number(process.env.OKO_DISCOVERY_SEC || 300), // как часто сканируем сеть
+  // Детекция движения (Этап 3). Порог YAVG разностного кадра: статика ~0, шум ~2.3, движение ~8+.
+  motionThreshold: Number(process.env.OKO_MOTION_THRESHOLD || 5),
+  motionFps: Number(process.env.OKO_MOTION_FPS || 4), // частота анализа (дёшево)
 };
 
 export function requireApiBase(): string {

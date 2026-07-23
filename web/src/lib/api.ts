@@ -24,6 +24,8 @@ export type Camera = {
   online: boolean;
   viaBridge: boolean;
   lastSeen: string | null;
+  recordMode: "continuous" | "motion";
+  notifyEnabled: boolean;
 };
 export type CameraConnection = {
   id: string;
@@ -38,9 +40,20 @@ export const listCameras = (): Promise<Camera[]> => api("/cameras");
 export const createCamera = (opts: { name: string; bridgeId?: string; sourceUrl?: string }): Promise<CameraConnection> =>
   api("/cameras", { method: "POST", body: JSON.stringify(opts) });
 export const getConnection = (id: string): Promise<CameraConnection> => api(`/cameras/${id}/connection`);
-export const patchCamera = (id: string, patch: { name?: string; enabled?: boolean }) =>
-  api(`/cameras/${id}`, { method: "PATCH", body: JSON.stringify(patch) });
+export const patchCamera = (
+  id: string,
+  patch: { name?: string; enabled?: boolean; recordMode?: "continuous" | "motion"; notifyEnabled?: boolean }
+) => api(`/cameras/${id}`, { method: "PATCH", body: JSON.stringify(patch) });
 export const deleteCamera = (id: string) => api(`/cameras/${id}`, { method: "DELETE" });
+
+// --- События движения (Этап 3) ---
+export type MotionEvent = { id: string; kind: string; startedAt: string; endedAt: string | null };
+export const listEvents = (cameraId: string): Promise<MotionEvent[]> => api(`/cameras/${cameraId}/events`);
+
+// --- Telegram-уведомления ---
+export type TelegramStatus = { linked: boolean; configured: boolean; url?: string; code?: string };
+export const getTelegramLink = (): Promise<TelegramStatus> => api("/telegram/link");
+export const unlinkTelegram = () => api("/telegram", { method: "DELETE" });
 
 // --- Bridge ---
 export type Bridge = {

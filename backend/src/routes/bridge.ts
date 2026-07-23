@@ -1,7 +1,9 @@
 import { Hono } from "hono";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { db, schema } from "../db";
 import { hashToken, ingestUrl, decryptSecret, isRtspUrl, HEARTBEAT_MS, rateLimit } from "../lib";
+import { setRecording } from "../mediamtx";
+import { sendTelegram } from "../telegram";
 
 // API для самого bridge-агента. Авторизация — Bearer okb_… (хэш в БД).
 // Всё self-scoped к bridge.userId/bridge.id — userId/bridgeId из тела не принимаем (нет IDOR).
@@ -19,7 +21,14 @@ async function desiredState(b: BridgeRow) {
     .where(and(eq(schema.cameras.bridgeId, b.id), eq(schema.cameras.userId, b.userId!))); // defense-in-depth
   const out: Array<Record<string, unknown>> = [];
   for (const r of rows) {
-    const base = { cameraId: r.id, path: r.path, enabled: r.enabled, ingestUrl: ingestUrl(r.path, r.publishToken) };
+    // motion: агенту нужно детектить движение, если запись по движению ИЛИ включены уведомления.
+    const base = {
+      cameraId: r.id,
+      path: r.path,
+      enabled: r.enabled,
+      ingestUrl: ingestUrl(r.path, r.publishToken),
+      motion: r.recordMode === "motion" || r.notifyEnabled,
+    };
     // ONVIF-режим: креды и xaddr — агент резолвит RTSP на своей стороне (креды не уходят в MediaMTX).
     if (r.onvifUrl && r.onvifCreds) {
       const creds = safeCreds(r.onvifCreds);
@@ -120,3 +129,49 @@ bridgeApi.post("/heartbeat", async (c) => {
   if (Array.isArray(body.discovered) && body.discovered.length) await ingestDiscovered(b, body.discovered);
   return c.json({ intervalMs: HEARTBEAT_MS, cameras: await desiredState(b) });
 });
+
+// Пинг движения: агент шлёт при обнаружении и периодически, пока движение длится.
+// Нарастающий фронт (нет открытого события) → создаём событие + уведомляем + включаем запись.
+// Спад/закрытие события и выключение записи по cooldown — в цикле reconcile (единый авторитет).
+bridgeApi.post("/motion", async (c) => {
+  const b = c.get("bridge");
+  const body = await c.req.json().catch(() => ({}) as any);
+  const cameraId = body.cameraId;
+  if (typeof cameraId !== "string" || !UUID_RE.test(cameraId)) return c.json({ error: "неверный cameraId" }, 400);
+  const [cam] = await db
+    .select()
+    .from(schema.cameras)
+    .where(and(eq(schema.cameras.id, cameraId), eq(schema.cameras.bridgeId, b.id)))
+    .limit(1);
+  if (!cam) return c.json({ ok: false }, 404); // не моя камера
+
+  const now = new Date();
+  await db.update(schema.cameras).set({ lastMotionAt: now }).where(eq(schema.cameras.id, cam.id));
+
+  const [open] = await db
+    .select({ id: schema.events.id })
+    .from(schema.events)
+    .where(and(eq(schema.events.cameraId, cam.id), isNull(schema.events.endedAt)))
+    .limit(1);
+  if (!open) {
+    // Нарастающий фронт движения.
+    await db.insert(schema.events).values({ cameraId: cam.id, userId: cam.userId, kind: "motion", startedAt: now });
+    if (cam.recordMode === "motion") await setRecording(cam.path, true); // низкая задержка старта записи
+    if (cam.notifyEnabled) void notifyMotion(cam.userId, cam.name); // не блокируем ответ агенту
+  }
+  return c.json({ ok: true });
+});
+
+// Уведомление о движении в Telegram (если привязан chatId). Fire-and-forget.
+async function notifyMotion(userId: string, cameraName: string) {
+  try {
+    const [u] = await db
+      .select({ chatId: schema.user.telegramChatId })
+      .from(schema.user)
+      .where(eq(schema.user.id, userId))
+      .limit(1);
+    if (u?.chatId) await sendTelegram(u.chatId, `🎥 Движение: <b>${cameraName}</b>`);
+  } catch (e) {
+    console.error("[motion] notify failed:", (e as Error).message);
+  }
+}
