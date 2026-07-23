@@ -110,6 +110,19 @@ ALTER TABLE "user"  ADD COLUMN IF NOT EXISTS ban_reason text;
 ALTER TABLE "user"  ADD COLUMN IF NOT EXISTS ban_expires timestamptz;
 ALTER TABLE bridges ADD COLUMN IF NOT EXISTS pairing_expires_at timestamptz;
 ALTER TABLE bridges ALTER COLUMN pairing_code DROP NOT NULL;
+-- Bridge-агент: токен хэшируется, отзыв, телеметрия
+ALTER TABLE bridges ALTER COLUMN token DROP NOT NULL;
+ALTER TABLE bridges ADD COLUMN IF NOT EXISTS token_hash    text;
+ALTER TABLE bridges ADD COLUMN IF NOT EXISTS token_prefix  text;
+ALTER TABLE bridges ADD COLUMN IF NOT EXISTS revoked_at    timestamptz;
+ALTER TABLE bridges ADD COLUMN IF NOT EXISTS agent_version text;
+ALTER TABLE bridges ADD COLUMN IF NOT EXISTS last_ip       text;
+CREATE UNIQUE INDEX IF NOT EXISTS bridges_token_hash_idx ON bridges(token_hash);
+-- Камеры: источник (RTSP камеры, зашифрован), desired-state, online-деривация
+ALTER TABLE cameras ADD COLUMN IF NOT EXISTS source_url text;
+ALTER TABLE cameras ADD COLUMN IF NOT EXISTS enabled    boolean NOT NULL DEFAULT true;
+ALTER TABLE cameras ADD COLUMN IF NOT EXISTS last_seen  timestamptz;
+CREATE INDEX IF NOT EXISTS cameras_bridge_idx ON cameras(bridge_id);
 `);
 
 console.log("migrate: ok");

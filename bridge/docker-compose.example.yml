@@ -1,0 +1,23 @@
+# oko-bridge — запусти на любом устройстве (мини-ПК / Raspberry Pi) в сети камер.
+# 1) Получи pairing-код в личном кабинете oko-cloud (раздел «Bridge» → «Добавить»).
+# 2) Впиши OKO_PAIR_CODE ниже, запусти: docker compose up -d
+# После первой привязки токен сохраняется в volume oko-bridge-data — код больше не нужен.
+
+services:
+  oko-bridge:
+    build: .
+    # или образ из реестра, когда опубликуем:
+    # image: ghcr.io/<you>/oko-bridge:latest
+    restart: unless-stopped
+    environment:
+      OKO_API: "https://api.tunnel.poploker.ru" # адрес API oko-cloud
+      OKO_PAIR_CODE: "" # код из ЛК (только на первую привязку)
+      # OKO_RTSP_TRANSPORT: tcp
+      # OKO_HEARTBEAT_SEC: 30
+      # OKO_LOG_LEVEL: info
+    volumes:
+      - oko-bridge-data:/data
+    # network_mode: host  # понадобится в Этапе 2 для ONVIF-автообнаружения (multicast). Для RTSP не нужно.
+
+volumes:
+  oko-bridge-data:

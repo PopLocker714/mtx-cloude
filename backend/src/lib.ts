@@ -1,10 +1,69 @@
 import { auth } from "./auth";
+import { createHash, randomBytes, createCipheriv, createDecipheriv } from "node:crypto";
 
 // --- случайные токены/коды ---
 export function randomToken(bytes = 24): string {
   const a = new Uint8Array(bytes);
   crypto.getRandomValues(a);
   return Array.from(a, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// Bridge-токен с самоопознаваемым префиксом (okb_ = oko-bridge), ~256 бит.
+export function bridgeToken(): string {
+  return "okb_" + randomToken(32);
+}
+export function hashToken(raw: string): string {
+  return createHash("sha256").update(raw).digest("hex");
+}
+
+// --- online-деривация bridge/камеры по heartbeat ---
+export const HEARTBEAT_MS = 30_000;
+export const BRIDGE_STALE_MS = 90_000;
+export function isOnline(lastSeen?: Date | null): boolean {
+  return !!lastSeen && Date.now() - lastSeen.getTime() < BRIDGE_STALE_MS;
+}
+
+// --- RTSP-ingest URL (перенесён из api.ts; единый источник) ---
+const INGEST_HOST = process.env.INGEST_HOST || "ingest.tunnel.poploker.ru:8554";
+export function ingestUrl(path: string, publishToken: string): string {
+  return `rtsp://pub:${publishToken}@${INGEST_HOST}/${path}`;
+}
+export function isRtspUrl(u: string): boolean {
+  return typeof u === "string" && /^rtsps?:\/\//i.test(u);
+}
+
+// --- Шифрование creds камеры (AES-256-GCM). Fail-closed: без ключа падаем. ---
+const KEY = process.env.BRIDGE_SECRET_KEY ? Buffer.from(process.env.BRIDGE_SECRET_KEY, "hex") : null;
+export function bridgeKeyConfigured(): boolean {
+  return !!KEY && KEY.length === 32;
+}
+export function encryptSecret(plain: string): string {
+  if (!KEY) throw new Error("BRIDGE_SECRET_KEY must be set (openssl rand -hex 32)");
+  const iv = randomBytes(12);
+  const c = createCipheriv("aes-256-gcm", KEY, iv);
+  const ct = Buffer.concat([c.update(plain, "utf8"), c.final()]);
+  return [iv, c.getAuthTag(), ct].map((b) => b.toString("base64")).join(".");
+}
+export function decryptSecret(blob: string): string {
+  if (!KEY) throw new Error("BRIDGE_SECRET_KEY must be set (openssl rand -hex 32)");
+  const [iv, tag, ct] = blob.split(".").map((s) => Buffer.from(s, "base64"));
+  const d = createDecipheriv("aes-256-gcm", KEY, iv);
+  d.setAuthTag(tag);
+  return Buffer.concat([d.update(ct), d.final()]).toString("utf8");
+}
+
+// --- Примитивный in-memory rate-limit (per-key, sliding window). Один инстанс; redis — Этап 3. ---
+const rlBuckets = new Map<string, number[]>();
+export function rateLimit(key: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const hits = (rlBuckets.get(key) ?? []).filter((t) => now - t < windowMs);
+  if (hits.length >= max) {
+    rlBuckets.set(key, hits);
+    return false; // превышен лимит
+  }
+  hits.push(now);
+  rlBuckets.set(key, hits);
+  return true;
 }
 
 // Человекочитаемый pairing-код: 8 символов без похожих (0/O, 1/I).

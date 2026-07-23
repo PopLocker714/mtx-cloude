@@ -1,7 +1,10 @@
 import { Hono } from "hono";
 import { and, eq, desc } from "drizzle-orm";
 import { db, schema } from "../db";
-import { randomToken, pairingCode, cameraPath, currentUser } from "../lib";
+import {
+  randomToken, pairingCode, cameraPath, currentUser,
+  bridgeToken, hashToken, ingestUrl, isRtspUrl, isOnline, encryptSecret, rateLimit,
+} from "../lib";
 
 export const api = new Hono();
 
@@ -9,24 +12,18 @@ const VIEW_TOKEN_TTL_MS = 1000 * 60 * 10; // 10 минут; плеер пере�
 const PAIRING_TTL_MS = 1000 * 60 * 15; // pairing-код живёт 15 минут
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Обрезка имени до разумного предела (защита от raw-payload).
 function cleanName(v: unknown, fallback: string): string {
   return typeof v === "string" && v.trim() ? v.trim().slice(0, 80) : fallback;
 }
-
-// Хост RTSP-ingest, куда bridge/ffmpeg пушат поток. Настраивается env (домен временный).
-const INGEST_HOST = process.env.INGEST_HOST || "ingest.tunnel.poploker.ru:8554";
-function ingestUrl(path: string, publishToken: string): string {
-  return `rtsp://pub:${publishToken}@${INGEST_HOST}/${path}`;
+function clientIp(c: any): string {
+  return c.req.header("x-forwarded-for")?.split(",")[0]?.trim() || c.req.header("x-real-ip") || "local";
 }
 
-// Регистрация/логин/сессии обслуживает Better Auth на /api/auth/*.
-// Здесь — только доменные операции; пользователь берётся из BA-сессии.
 async function requireUser(c: any) {
   return currentUser(c.req.raw.headers);
 }
 
-// --- Создать bridge → pairing-код ---
+// --- Создать bridge → pairing-код (токен генерится при /pair) ---
 api.post("/bridges", async (c) => {
   const u = await requireUser(c);
   if (!u) return c.json({ error: "нужна авторизация" }, 401);
@@ -38,43 +35,100 @@ api.post("/bridges", async (c) => {
       name: cleanName(name, "Bridge"),
       pairingCode: pairingCode(),
       pairingExpiresAt: new Date(Date.now() + PAIRING_TTL_MS),
-      token: randomToken(32),
     })
     .returning();
   return c.json({ id: b.id, name: b.name, pairingCode: b.pairingCode, expiresInMs: PAIRING_TTL_MS });
 });
 
-// --- Bridge привязывается по pairing-коду → получает постоянный токен ---
-// Код одноразовый (после привязки гасится) и с TTL. Различие «не найден / истёк»
-// наружу не выдаём — единый ответ, чтобы не давать оракул перебора.
+// --- Bridge привязывается по pairing-коду → токен (показан ОДИН раз; в БД только hash) ---
 api.post("/bridges/pair", async (c) => {
+  // Rate-limit неаутентифицированного эндпоинта (H-3): 10/мин на IP.
+  if (!rateLimit(`pair:${clientIp(c)}`, 10, 60_000)) return c.json({ error: "слишком много попыток" }, 429);
   const { pairingCode: code } = await c.req.json().catch(() => ({}));
   if (typeof code !== "string" || code.length !== 8) return c.json({ error: "неверный код" }, 400);
   const [b] = await db.select().from(schema.bridges).where(eq(schema.bridges.pairingCode, code)).limit(1);
   if (!b || !b.pairingExpiresAt || b.pairingExpiresAt.getTime() < Date.now()) {
     return c.json({ error: "код недействителен" }, 401);
   }
-  // Атомарно гасим код: обновляем только если он ещё тот же (single-use гонко-безопасно).
+  const raw = bridgeToken();
+  // Атомарно гасим код и пишем hash (single-use гонко-безопасно).
   const [paired] = await db
     .update(schema.bridges)
-    .set({ pairingCode: null, pairingExpiresAt: null, pairedAt: new Date(), lastSeen: new Date() })
+    .set({
+      pairingCode: null,
+      pairingExpiresAt: null,
+      pairedAt: new Date(),
+      lastSeen: new Date(),
+      tokenHash: hashToken(raw),
+      tokenPrefix: raw.slice(0, 8),
+    })
     .where(and(eq(schema.bridges.id, b.id), eq(schema.bridges.pairingCode, code)))
     .returning();
   if (!paired) return c.json({ error: "код недействителен" }, 401);
-  return c.json({ bridgeId: b.id, token: b.token });
+  return c.json({ bridgeId: b.id, token: raw }); // raw показан единственный раз
 });
 
-// --- Зарегистрировать камеру → path + publish-токен ---
+// --- Список моих bridge (без секретов), online деривируется ---
+api.get("/bridges", async (c) => {
+  const u = await requireUser(c);
+  if (!u) return c.json({ error: "нужна авторизация" }, 401);
+  const rows = await db.select().from(schema.bridges).where(eq(schema.bridges.userId, u.id));
+  return c.json(
+    rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      paired: !!r.pairedAt,
+      online: isOnline(r.lastSeen),
+      lastSeen: r.lastSeen,
+      agentVersion: r.agentVersion,
+      tokenPrefix: r.tokenPrefix,
+      pairingCode: r.pairingCode, // ещё не привязан — показываем код; после привязки null
+    }))
+  );
+});
+
+// --- Отозвать токен bridge (мгновенно, привязки камер не рушит) ---
+api.post("/bridges/:id/revoke", async (c) => {
+  const u = await requireUser(c);
+  if (!u) return c.json({ error: "нужна авторизация" }, 401);
+  const id = c.req.param("id");
+  if (!UUID_RE.test(id)) return c.json({ error: "неверный id" }, 400);
+  const [b] = await db.select().from(schema.bridges).where(eq(schema.bridges.id, id)).limit(1);
+  if (!b || b.userId !== u.id) return c.json({ error: "bridge не найден" }, 404);
+  await db.update(schema.bridges).set({ revokedAt: new Date() }).where(eq(schema.bridges.id, id));
+  return c.json({ ok: true });
+});
+
+// --- Удалить bridge (камеры отвяжутся: bridgeId → NULL) ---
+api.delete("/bridges/:id", async (c) => {
+  const u = await requireUser(c);
+  if (!u) return c.json({ error: "нужна авторизация" }, 401);
+  const id = c.req.param("id");
+  if (!UUID_RE.test(id)) return c.json({ error: "неверный id" }, 400);
+  const [b] = await db.select().from(schema.bridges).where(eq(schema.bridges.id, id)).limit(1);
+  if (!b || b.userId !== u.id) return c.json({ error: "bridge не найден" }, 404);
+  await db.delete(schema.bridges).where(eq(schema.bridges.id, id));
+  return c.json({ ok: true });
+});
+
+// --- Зарегистрировать камеру. sourceUrl (RTSP) — только вместе с bridgeId, шифруется. ---
 api.post("/cameras", async (c) => {
   const u = await requireUser(c);
   if (!u) return c.json({ error: "нужна авторизация" }, 401);
-  const { name, bridgeId } = await c.req.json().catch(() => ({}));
-  // bridgeId, если задан, ДОЛЖЕН принадлежать этому юзеру (иначе IDOR, M-2).
+  const { name, bridgeId, sourceUrl } = await c.req.json().catch(() => ({}));
+
   if (bridgeId !== undefined && bridgeId !== null) {
     if (typeof bridgeId !== "string" || !UUID_RE.test(bridgeId)) return c.json({ error: "неверный bridgeId" }, 400);
     const [br] = await db.select().from(schema.bridges).where(eq(schema.bridges.id, bridgeId)).limit(1);
     if (!br || br.userId !== u.id) return c.json({ error: "bridge не найден" }, 404);
   }
+  let encryptedSource: string | null = null;
+  if (sourceUrl !== undefined && sourceUrl !== null && sourceUrl !== "") {
+    if (!bridgeId) return c.json({ error: "sourceUrl требует bridgeId" }, 400); // M-6
+    if (!isRtspUrl(sourceUrl)) return c.json({ error: "sourceUrl должен быть rtsp://" }, 400); // LOW-1
+    encryptedSource = encryptSecret(String(sourceUrl));
+  }
+
   const [cam] = await db
     .insert(schema.cameras)
     .values({
@@ -83,6 +137,7 @@ api.post("/cameras", async (c) => {
       name: cleanName(name, "Камера"),
       path: cameraPath(),
       publishToken: randomToken(20),
+      sourceUrl: encryptedSource,
     })
     .returning();
   return c.json({
@@ -94,12 +149,52 @@ api.post("/cameras", async (c) => {
   });
 });
 
-// --- Список моих камер (без секретов) ---
+// --- Список моих камер (без секретов); online = deriv(lastSeen) && enabled ---
 api.get("/cameras", async (c) => {
   const u = await requireUser(c);
   if (!u) return c.json({ error: "нужна авторизация" }, 401);
   const rows = await db.select().from(schema.cameras).where(eq(schema.cameras.userId, u.id));
-  return c.json(rows.map((r) => ({ id: r.id, name: r.name, path: r.path, createdAt: r.createdAt })));
+  return c.json(
+    rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      path: r.path,
+      createdAt: r.createdAt,
+      bridgeId: r.bridgeId,
+      enabled: r.enabled,
+      online: isOnline(r.lastSeen) && r.enabled,
+      lastSeen: r.lastSeen,
+      viaBridge: !!r.sourceUrl,
+    }))
+  );
+});
+
+// --- Изменить камеру (имя / вкл-выкл) ---
+api.patch("/cameras/:id", async (c) => {
+  const u = await requireUser(c);
+  if (!u) return c.json({ error: "нужна авторизация" }, 401);
+  const id = c.req.param("id");
+  if (!UUID_RE.test(id)) return c.json({ error: "неверный id" }, 400);
+  const [cam] = await db.select().from(schema.cameras).where(eq(schema.cameras.id, id)).limit(1);
+  if (!cam || cam.userId !== u.id) return c.json({ error: "камера не найдена" }, 404);
+  const body = await c.req.json().catch(() => ({}));
+  const patch: { name?: string; enabled?: boolean } = {};
+  if (typeof body.name === "string") patch.name = cleanName(body.name, cam.name);
+  if (typeof body.enabled === "boolean") patch.enabled = body.enabled;
+  if (Object.keys(patch).length) await db.update(schema.cameras).set(patch).where(eq(schema.cameras.id, id));
+  return c.json({ ok: true });
+});
+
+// --- Удалить камеру (форвардер гаснет на след. heartbeat; архив истечёт по recordDeleteAfter) ---
+api.delete("/cameras/:id", async (c) => {
+  const u = await requireUser(c);
+  if (!u) return c.json({ error: "нужна авторизация" }, 401);
+  const id = c.req.param("id");
+  if (!UUID_RE.test(id)) return c.json({ error: "неверный id" }, 400);
+  const [cam] = await db.select().from(schema.cameras).where(eq(schema.cameras.id, id)).limit(1);
+  if (!cam || cam.userId !== u.id) return c.json({ error: "камера не найдена" }, 404);
+  await db.delete(schema.cameras).where(eq(schema.cameras.id, id));
+  return c.json({ ok: true });
 });
 
 // --- Данные подключения одной камеры (владелец/админ): path + publishToken + ingestUrl ---

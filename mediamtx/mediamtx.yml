@@ -9,6 +9,11 @@
 
 logLevel: info
 
+# Таймауты чтения/записи: при сетевом разрыве за NAT осиротевший publish-коннект
+# держит path не дольше этого — иначе реконнект bridge получает "already publishing" (HIGH-2).
+readTimeout: 10s
+writeTimeout: 10s
+
 # --- Control API (для будущего ЛК: список потоков, kick и т.п.) ---
 # Порт 9997 наружу не публикуется (см. docker-compose).
 api: yes

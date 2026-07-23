@@ -79,7 +79,13 @@ export const bridges = pgTable("bridges", {
   // pairingCode — одноразовый (после привязки → null) и с TTL (pairingExpiresAt).
   pairingCode: text("pairing_code").unique(),
   pairingExpiresAt: timestamp("pairing_expires_at", { withTimezone: true }),
-  token: text("token").notNull().unique(),
+  // Токен генерится при /pair; в БД только SHA-256 хэш (сырой показан один раз). token — legacy, nullable.
+  token: text("token").unique(),
+  tokenHash: text("token_hash").unique(),
+  tokenPrefix: text("token_prefix"), // "okb_xxxx" для UI/логов, без секрета
+  revokedAt: timestamp("revoked_at", { withTimezone: true }), // мгновенный отзыв, привязки камер не рушит
+  agentVersion: text("agent_version"),
+  lastIp: text("last_ip"),
   pairedAt: timestamp("paired_at", { withTimezone: true }),
   lastSeen: timestamp("last_seen", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -94,9 +100,13 @@ export const cameras = pgTable(
     name: text("name").notNull().default("Камера"),
     path: text("path").notNull().unique(),
     publishToken: text("publish_token").notNull(),
+    // sourceUrl — RTSP камеры с логином/паролем, зашифрован AES-256-GCM (iv.tag.ct base64). NULL для ручного flow.
+    sourceUrl: text("source_url"),
+    enabled: boolean("enabled").notNull().default(true), // desired-state для агента
+    lastSeen: timestamp("last_seen", { withTimezone: true }), // последний heartbeat с этой камерой; online деривируем
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => ({ byUser: index("cameras_user_idx").on(t.userId) })
+  (t) => ({ byUser: index("cameras_user_idx").on(t.userId), byBridge: index("cameras_bridge_idx").on(t.bridgeId) })
 );
 
 export const viewTokens = pgTable(

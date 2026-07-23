@@ -1,13 +1,15 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { auth } from "./auth";
-import { ensureAdmin } from "./bootstrap";
+import { ensureAdmin, ensureBridgeKey } from "./bootstrap";
 import { mediamtxAuth } from "./routes/mediamtx-auth";
 import { api } from "./routes/api";
+import { bridgeApi } from "./routes/bridge";
 import { stubAuth } from "./routes/stub-auth";
 
-// Бутстрап админа из env при старте (create-or-promote).
+// Бутстрап при старте: админ из env + fail-closed проверка ключа шифрования creds.
 await ensureAdmin();
+await ensureBridgeKey();
 
 const app = new Hono();
 
@@ -38,7 +40,10 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 // Внешний авторизатор MediaMTX (только из docker-сети, наружу не публикуется).
 app.route("/internal/mediamtx-auth", mediamtxAuth);
 
-// Доменный API (камеры, bridge, view-токены) — авторизация по BA-сессии.
+// API bridge-агента (Bearer okb_…) — монтируем ДО /api, путь более специфичный.
+app.route("/api/bridge", bridgeApi);
+
+// Доменный API (камеры, bridge-управление из ЛК, view-токены) — авторизация по BA-сессии.
 app.route("/api", api);
 
 // ЗАГОТОВКА флоу подтверждения email / сброса пароля (стаб, любой код). /api/stub/*.
