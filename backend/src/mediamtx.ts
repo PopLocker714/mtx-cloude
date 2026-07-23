@@ -36,3 +36,17 @@ export async function setRecording(path: string, on: boolean): Promise<boolean> 
     return false;
   }
 }
+
+// Удалить рантайм-конфиг пути (при удалении камеры) — чтобы не копить осиротевшие пути.
+// Идемпотентно и best-effort: нет пути / MediaMTX недоступен → молча.
+export async function deleteRecordingPath(path: string): Promise<void> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 5000);
+  try {
+    await fetch(`${MTX_API}/v3/config/paths/delete/${encodeURIComponent(path)}`, { method: "DELETE", signal: ctrl.signal });
+  } catch {
+    /* нет пути под all_others или MediaMTX недоступен — не критично */
+  } finally {
+    clearTimeout(t);
+  }
+}

@@ -10,7 +10,12 @@ import { sendOtp } from "../email";
 // открытую смену пароля по email. UI-страницы показывают флоу в любом случае.
 export const stubAuth = new Hono();
 
-const STUB_ENABLED = process.env.STUB_AUTH === "1";
+// Жёсткая защита (H2): демо-сброс пароля НИКОГДА не работает в проде, даже если STUB_AUTH=1
+// случайно оставили включённым после демонстрации. В проде — только реальный флоу (Unisender Go).
+const STUB_ENABLED = process.env.STUB_AUTH === "1" && process.env.NODE_ENV !== "production";
+if (process.env.STUB_AUTH === "1" && process.env.NODE_ENV === "production") {
+  console.warn("SECURITY: STUB_AUTH=1 проигнорирован в production — демо-сброс пароля отключён.");
+}
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 // «Отправить код» — сейчас no-op (лог). Документирует шаг отправки.

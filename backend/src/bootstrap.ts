@@ -1,4 +1,4 @@
-import { eq, isNotNull, sql } from "drizzle-orm";
+import { eq, isNotNull, or, sql } from "drizzle-orm";
 import { auth } from "./auth";
 import { db, schema } from "./db";
 import { bridgeKeyConfigured } from "./lib";
@@ -6,13 +6,14 @@ import { bridgeKeyConfigured } from "./lib";
 // Fail-closed: если в БД есть зашифрованные creds камер, но ключ не задан — падаем при старте.
 export async function ensureBridgeKey(): Promise<void> {
   if (bridgeKeyConfigured()) return;
+  // Считаем камеры с ЛЮБЫМ зашифрованным секретом: RTSP source_url (Этап 1) ИЛИ onvif_creds (Этап 2).
   const [{ n }] = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(schema.cameras)
-    .where(isNotNull(schema.cameras.sourceUrl));
+    .where(or(isNotNull(schema.cameras.sourceUrl), isNotNull(schema.cameras.onvifCreds)));
   if (n > 0) {
     throw new Error(
-      `BRIDGE_SECRET_KEY must be set (openssl rand -hex 32): ${n} camera(s) have encrypted source_url that cannot be decrypted without it`
+      `BRIDGE_SECRET_KEY must be set (openssl rand -hex 32): ${n} camera(s) have encrypted credentials (source_url/onvif_creds) that cannot be decrypted without it`
     );
   }
 }

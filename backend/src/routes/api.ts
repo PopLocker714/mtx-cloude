@@ -3,9 +3,9 @@ import { and, eq, desc, isNull } from "drizzle-orm";
 import { db, schema } from "../db";
 import {
   randomToken, pairingCode, cameraPath, currentUser,
-  bridgeToken, hashToken, ingestUrl, isRtspUrl, isOnline, encryptSecret, rateLimit,
+  bridgeToken, hashToken, ingestUrl, isRtspUrl, isOnline, encryptSecret, rateLimit, realIp,
 } from "../lib";
-import { setRecording } from "../mediamtx";
+import { setRecording, deleteRecordingPath } from "../mediamtx";
 import { forgetRecordState } from "../reconcile";
 import { telegramLink, telegramConfigured } from "../telegram";
 
@@ -19,7 +19,7 @@ function cleanName(v: unknown, fallback: string): string {
   return typeof v === "string" && v.trim() ? v.trim().slice(0, 80) : fallback;
 }
 function clientIp(c: any): string {
-  return c.req.header("x-forwarded-for")?.split(",")[0]?.trim() || c.req.header("x-real-ip") || "local";
+  return realIp(c.req.header("x-forwarded-for"), c.req.header("x-real-ip"));
 }
 
 async function requireUser(c: any) {
@@ -207,6 +207,9 @@ api.delete("/cameras/:id", async (c) => {
   const [cam] = await db.select().from(schema.cameras).where(eq(schema.cameras.id, id)).limit(1);
   if (!cam || cam.userId !== u.id) return c.json({ error: "камера не найдена" }, 404);
   await db.delete(schema.cameras).where(eq(schema.cameras.id, id));
+  // Чистим осиротевший конфиг записи в MediaMTX + in-memory состояние гейта (L1).
+  await deleteRecordingPath(cam.path);
+  forgetRecordState(cam.path);
   return c.json({ ok: true });
 });
 

@@ -89,6 +89,15 @@ export async function currentUser(headers: Headers): Promise<{ id: string; role:
   return { id: s.user.id, role: (s.user as any).role ?? "user" };
 }
 
+// Реальный IP клиента за ОДНИМ доверенным прокси (Traefik дописывает его в КОНЕЦ XFF).
+// Берём последний элемент: всё, что раньше — клиент мог подделать. Первый ([0]) спуфится
+// и ломает per-IP rate-limit/аудит (H3). Предполагает ровно один доверенный прокси.
+export function realIp(xff?: string | null, xRealIp?: string | null): string {
+  const parts = (xff || "").split(",").map((s) => s.trim()).filter(Boolean);
+  if (parts.length) return parts[parts.length - 1];
+  return (xRealIp || "").trim() || "local";
+}
+
 // Приватный IP — для служебных действий MediaMTX (api/metrics), не публичных.
 // Разбор по октетам, а не startsWith: 172.x приватен ТОЛЬКО 172.16–172.31 (docker сюда попадает).
 export function isPrivateIp(ip: string | undefined): boolean {

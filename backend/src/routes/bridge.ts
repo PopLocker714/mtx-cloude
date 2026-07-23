@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { and, eq, isNull } from "drizzle-orm";
 import { db, schema } from "../db";
-import { hashToken, ingestUrl, decryptSecret, isRtspUrl, HEARTBEAT_MS, rateLimit } from "../lib";
+import { hashToken, ingestUrl, decryptSecret, isRtspUrl, HEARTBEAT_MS, rateLimit, realIp } from "../lib";
 import { setRecording } from "../mediamtx";
 import { sendTelegram } from "../telegram";
 
@@ -94,7 +94,7 @@ async function ingestDiscovered(b: BridgeRow, devices: unknown[]) {
 bridgeApi.use("*", async (c, next) => {
   const m = /^Bearer\s+(okb_[0-9a-f]{16,})$/i.exec(c.req.header("authorization") || "");
   if (!m) return c.json({ error: "нужен bridge-токен" }, 401);
-  const ip = c.req.header("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  const ip = realIp(c.req.header("x-forwarded-for"), c.req.header("x-real-ip"));
   if (!rateLimit(`bridge:${ip}`, 120, 60_000)) return c.json({ error: "слишком много запросов" }, 429);
   const [b] = await db.select().from(schema.bridges).where(eq(schema.bridges.tokenHash, hashToken(m[1]))).limit(1);
   if (!b || !b.pairedAt || b.revokedAt) return c.json({ error: "bridge не привязан" }, 401);
@@ -113,7 +113,7 @@ bridgeApi.post("/heartbeat", async (c) => {
     .update(schema.bridges)
     .set({
       lastSeen: new Date(),
-      lastIp: c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+      lastIp: realIp(c.req.header("x-forwarded-for"), c.req.header("x-real-ip")),
       agentVersion: typeof body.agentVersion === "string" ? body.agentVersion.slice(0, 40) : b.agentVersion,
     })
     .where(eq(schema.bridges.id, b.id));
