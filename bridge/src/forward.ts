@@ -34,12 +34,18 @@ class CameraForwarder {
   }
 
   private args(sourceUrl: string): string[] {
+    // Шифрованный ингест: если ingestUrl = rtsps://, включаем TLS-верификацию сервера
+    // (проверено эмпирически: ffmpeg публикует по rtsps; verify=1 даёт защиту от MITM).
+    const tls = /^rtsps:\/\//i.test(this.ingestUrl)
+      ? ["-tls_verify", config.ingestTlsVerify, ...(config.ingestCaFile ? ["-ca_file", config.ingestCaFile] : [])]
+      : [];
     return [
       "ffmpeg", "-hide_banner", "-nostats", "-loglevel", "warning",
       "-rtsp_transport", config.rtspTransport,
       "-timeout", String(config.inputTimeoutSec * 1_000_000), // RTSP socket-таймаут (мкс): роняет ffmpeg на залипшем входе (M-2)
       "-i", sourceUrl,
       "-c:v", "copy", "-an", // video-only remux; аудио — позже
+      ...tls,
       "-f", "rtsp", "-rtsp_transport", "tcp", this.ingestUrl,
     ];
   }

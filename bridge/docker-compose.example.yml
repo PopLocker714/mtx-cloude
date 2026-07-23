@@ -20,6 +20,9 @@ services:
       OKO_PAIR_CODE: "" # код из ЛК (только на первую привязку)
       # OKO_DISCOVERY: "1"        # ONVIF-автообнаружение камер в LAN (по умолчанию вкл; "0" — выкл)
       # OKO_DISCOVERY_SEC: "300"  # как часто сканировать сеть, сек
+      # Шифрованный ингест (rtsps): схема берётся из desired-state автоматически. Верификация cert:
+      # OKO_INGEST_TLS_VERIFY: "1"   # дефолт — проверять серверный cert (реальный/LE). "0" — только для self-signed
+      # OKO_INGEST_CA_FILE: "/certs/ca.crt"  # если сервер на своём CA (пиннинг)
       # OKO_RTSP_TRANSPORT: tcp
       # OKO_HEARTBEAT_SEC: 30
       # OKO_LOG_LEVEL: info

@@ -14,6 +14,10 @@ export const config = {
   heartbeatSec: Number(process.env.OKO_HEARTBEAT_SEC || 30),
   rtspTransport: process.env.OKO_RTSP_TRANSPORT || "tcp", // tcp надёжнее за NAT
   inputTimeoutSec: Number(process.env.OKO_INPUT_TIMEOUT_SEC || 15), // -rw_timeout: роняет ffmpeg на залипшем входе
+  // Шифрованный ингест (rtsps): верифицировать серверный cert. "1" — да (реальный/LE cert, защита от MITM),
+  // "0" — только для self-signed (защита лишь от пассивного прослушивания). ingestCaFile — свой CA для пиннинга.
+  ingestTlsVerify: process.env.OKO_INGEST_TLS_VERIFY === "0" ? "0" : "1",
+  ingestCaFile: process.env.OKO_INGEST_CA_FILE || "",
   logLevel: process.env.OKO_LOG_LEVEL || "info",
   // ONVIF-обнаружение камер в LAN (Этап 2). OKO_DISCOVERY=0 отключает.
   discoveryEnabled: process.env.OKO_DISCOVERY !== "0",

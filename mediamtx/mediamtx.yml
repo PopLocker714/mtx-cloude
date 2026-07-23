@@ -31,6 +31,16 @@ authHTTPExclude: []
 # --- Приём потоков (ingest) ---
 rtsp: yes
 rtspAddress: :8554
+# ── Шифрованный ингест RTSPS (фикс H1: видео+publishToken в канале bridge→облако не открытым текстом) ──
+# По умолчанию ВЫКЛ (нужен серверный сертификат, иначе MediaMTX не стартует). Включается на деплое env-ами:
+#   MTX_RTSPENCRYPTION=optional     # optional = слушать И :8554 (старые агенты), И :8322 RTSPS (новые) — плавный переход
+#   MTX_RTSPTRANSPORTS=tcp          # TLS требует TCP
+#   MTX_RTSPSADDRESS=:8322
+#   MTX_RTSPSERVERCERT=/certs/ingest.crt
+#   MTX_RTSPSERVERKEY=/certs/ingest.key
+# + смонтировать cert в /certs (см. docker-compose), открыть порт 8322, и на backend выставить
+#   INGEST_SCHEME=rtsps + INGEST_HOST=ingest.<домен>:8322. Проверено: ffmpeg публикует по rtsps,
+#   publishToken по-прежнему проходит через auth-hook. Верификацию cert на агенте держит OKO_INGEST_TLS_VERIFY=1.
 
 rtmp: no
 srt: no

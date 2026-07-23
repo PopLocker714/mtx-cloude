@@ -27,9 +27,12 @@ export function isOnline(lastSeen?: Date | null): boolean {
 }
 
 // --- RTSP-ingest URL (перенесён из api.ts; единый источник) ---
+// INGEST_SCHEME: "rtsp" (открытый, дефолт) | "rtsps" (RTSP-over-TLS, фикс H1 — шифрует
+// видео+publishToken в канале bridge→облако). При rtsps укажи INGEST_HOST с портом RTSPS (напр. :8322).
 const INGEST_HOST = process.env.INGEST_HOST || "ingest.tunnel.poploker.ru:8554";
+const INGEST_SCHEME = (process.env.INGEST_SCHEME || "rtsp").toLowerCase() === "rtsps" ? "rtsps" : "rtsp";
 export function ingestUrl(path: string, publishToken: string): string {
-  return `rtsp://pub:${publishToken}@${INGEST_HOST}/${path}`;
+  return `${INGEST_SCHEME}://pub:${publishToken}@${INGEST_HOST}/${path}`;
 }
 export function isRtspUrl(u: string): boolean {
   return typeof u === "string" && /^rtsps?:\/\//i.test(u);

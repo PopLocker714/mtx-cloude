@@ -61,7 +61,8 @@ services:
     depends_on:
       - backend
     ports:
-      - "8554:8554"       # RTSP ingest
+      - "8554:8554"       # RTSP ingest (открытый; оставить для плавного перехода)
+      - "8322:8322"       # RTSPS ingest (TLS, фикс H1) — активен только когда включено шифрование
       - "8888:8888"       # HLS live
       - "8889:8889"       # WebRTC live
       - "8189:8189/udp"   # WebRTC ICE
@@ -70,9 +71,16 @@ services:
       MTX_WEBRTCADDITIONALHOSTS: "${SERVER_HOST}"
       # Внешний авторизатор — наш backend. Без него MediaMTX не пустит никого.
       MTX_AUTHHTTPADDRESS: "http://backend:9998/internal/mediamtx-auth"
+      # ── Включить RTSPS-ингест (H1): раскомментировать + смонтировать cert ниже + INGEST_SCHEME=rtsps на backend ──
+      # MTX_RTSPENCRYPTION: "optional"     # optional = 8554 (старые агенты) + 8322 (RTSPS) одновременно
+      # MTX_RTSPTRANSPORTS: "tcp"
+      # MTX_RTSPSADDRESS: ":8322"
+      # MTX_RTSPSERVERCERT: "/certs/ingest.crt"
+      # MTX_RTSPSERVERKEY: "/certs/ingest.key"
     volumes:
       - ./mediamtx/mediamtx.yml:/mediamtx.yml:ro
       - recordings:/recordings
+      # - ./certs:/certs:ro   # cert для RTSPS (см. .env.example: выдача Let's Encrypt для ingest-домена)
 
 volumes:
   recordings:
