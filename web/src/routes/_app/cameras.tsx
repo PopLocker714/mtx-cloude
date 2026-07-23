@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Plus, Video, Link2 } from "lucide-react";
-import { listCameras, type Camera } from "@/lib/api";
+import { Plus, Video, Link2, Circle, Trash2 } from "lucide-react";
+import { listCameras, deleteCamera, type Camera } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -53,8 +53,8 @@ function CamerasPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Название</TableHead>
-                  <TableHead>Путь (id потока)</TableHead>
-                  <TableHead>Добавлена</TableHead>
+                  <TableHead>Статус</TableHead>
+                  <TableHead>Подключение</TableHead>
                   <TableHead className="text-right">Действия</TableHead>
                 </TableRow>
               </TableHeader>
@@ -66,16 +66,38 @@ function CamerasPage() {
                         {c.name}
                       </Link>
                     </TableCell>
-                    <TableCell className="font-mono text-xs">{c.path}</TableCell>
-                    <TableCell className="text-muted-foreground">{new Date(c.createdAt).toLocaleString()}</TableCell>
-                    <TableCell className="text-right space-x-2">
+                    <TableCell>
+                      {c.online ? (
+                        <span className="flex items-center gap-1.5 text-sm text-green-600">
+                          <Circle className="size-2 fill-green-600" /> онлайн
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <Circle className="size-2 fill-muted-foreground" /> офлайн
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{c.viaBridge ? "через bridge" : "вручную"}</TableCell>
+                    <TableCell className="text-right space-x-1">
                       <Button variant="secondary" size="sm" asChild>
                         <Link to="/camera/$cameraId" params={{ cameraId: c.id }}>
                           <Video className="size-4" /> Смотреть
                         </Link>
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => setConnId(c.id)}>
-                        <Link2 className="size-4" /> Подключение
+                      {!c.viaBridge && (
+                        <Button variant="outline" size="sm" onClick={() => setConnId(c.id)}>
+                          <Link2 className="size-4" /> Данные
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Удалить"
+                        onClick={() => {
+                          if (confirm(`Удалить камеру «${c.name}»?`)) deleteCamera(c.id).then(refresh);
+                        }}
+                      >
+                        <Trash2 className="size-4" />
                       </Button>
                     </TableCell>
                   </TableRow>

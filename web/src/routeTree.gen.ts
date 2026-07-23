@@ -18,6 +18,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
+import { Route as AppBridgesRouteImport } from './routes/_app/bridges'
 import { Route as AppCamerasRouteImport } from './routes/_app/cameras'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppCameraCameraIdRouteImport } from './routes/_app/camera.$cameraId'
@@ -66,6 +67,11 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBridgesRoute = AppBridgesRouteImport.update({
+  id: '/bridges',
+  path: '/bridges',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppCamerasRoute = AppCamerasRouteImport.update({
   id: '/cameras',
   path: '/cameras',
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin': typeof AppAdminRoute
+  '/bridges': typeof AppBridgesRoute
   '/cameras': typeof AppCamerasRoute
   '/profile': typeof AppProfileRoute
   '/camera/$cameraId': typeof AppCameraCameraIdRoute
@@ -104,6 +111,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin': typeof AppAdminRoute
+  '/bridges': typeof AppBridgesRoute
   '/cameras': typeof AppCamerasRoute
   '/profile': typeof AppProfileRoute
   '/camera/$cameraId': typeof AppCameraCameraIdRoute
@@ -119,6 +127,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_app/admin': typeof AppAdminRoute
+  '/_app/bridges': typeof AppBridgesRoute
   '/_app/cameras': typeof AppCamerasRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/camera/$cameraId': typeof AppCameraCameraIdRoute
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/verify-email'
     | '/admin'
+    | '/bridges'
     | '/cameras'
     | '/profile'
     | '/camera/$cameraId'
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/verify-email'
     | '/admin'
+    | '/bridges'
     | '/cameras'
     | '/profile'
     | '/camera/$cameraId'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/verify-email'
     | '/_app/admin'
+    | '/_app/bridges'
     | '/_app/cameras'
     | '/_app/profile'
     | '/_app/camera/$cameraId'
@@ -242,6 +254,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/bridges': {
+      id: '/_app/bridges'
+      path: '/bridges'
+      fullPath: '/bridges'
+      preLoaderRoute: typeof AppBridgesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/cameras': {
       id: '/_app/cameras'
       path: '/cameras'
@@ -268,6 +287,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
+  AppBridgesRoute: typeof AppBridgesRoute
   AppCamerasRoute: typeof AppCamerasRoute
   AppProfileRoute: typeof AppProfileRoute
   AppCameraCameraIdRoute: typeof AppCameraCameraIdRoute
@@ -275,6 +295,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
+  AppBridgesRoute: AppBridgesRoute,
   AppCamerasRoute: AppCamerasRoute,
   AppProfileRoute: AppProfileRoute,
   AppCameraCameraIdRoute: AppCameraCameraIdRoute,

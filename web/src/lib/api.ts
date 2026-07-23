@@ -14,7 +14,17 @@ async function api(path: string, init?: RequestInit) {
   return res.json();
 }
 
-export type Camera = { id: string; name: string; path: string; createdAt: string };
+export type Camera = {
+  id: string;
+  name: string;
+  path: string;
+  createdAt: string;
+  bridgeId: string | null;
+  enabled: boolean;
+  online: boolean;
+  viaBridge: boolean;
+  lastSeen: string | null;
+};
 export type CameraConnection = {
   id: string;
   name: string;
@@ -24,10 +34,30 @@ export type CameraConnection = {
 };
 
 export const listCameras = (): Promise<Camera[]> => api("/cameras");
-export const createCamera = (name: string): Promise<CameraConnection> =>
-  api("/cameras", { method: "POST", body: JSON.stringify({ name }) });
-export const getConnection = (id: string): Promise<CameraConnection> =>
-  api(`/cameras/${id}/connection`);
+// name-only (ручной ffmpeg-flow) ИЛИ через bridge (bridgeId + sourceUrl RTSP).
+export const createCamera = (opts: { name: string; bridgeId?: string; sourceUrl?: string }): Promise<CameraConnection> =>
+  api("/cameras", { method: "POST", body: JSON.stringify(opts) });
+export const getConnection = (id: string): Promise<CameraConnection> => api(`/cameras/${id}/connection`);
+export const patchCamera = (id: string, patch: { name?: string; enabled?: boolean }) =>
+  api(`/cameras/${id}`, { method: "PATCH", body: JSON.stringify(patch) });
+export const deleteCamera = (id: string) => api(`/cameras/${id}`, { method: "DELETE" });
+
+// --- Bridge ---
+export type Bridge = {
+  id: string;
+  name: string;
+  paired: boolean;
+  online: boolean;
+  lastSeen: string | null;
+  agentVersion: string | null;
+  tokenPrefix: string | null;
+  pairingCode: string | null;
+};
+export const listBridges = (): Promise<Bridge[]> => api("/bridges");
+export const createBridge = (name: string): Promise<{ id: string; name: string; pairingCode: string; expiresInMs: number }> =>
+  api("/bridges", { method: "POST", body: JSON.stringify({ name }) });
+export const revokeBridge = (id: string) => api(`/bridges/${id}/revoke`, { method: "POST" });
+export const deleteBridge = (id: string) => api(`/bridges/${id}`, { method: "DELETE" });
 export const createViewToken = (cameraId?: string): Promise<{ token: string; ttlMs: number }> =>
   api("/cameras/view-token", { method: "POST", body: JSON.stringify(cameraId ? { cameraId } : {}) });
 
