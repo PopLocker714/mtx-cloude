@@ -89,7 +89,8 @@ export function AdoptCameraDialog({ camera, onOpenChange, onAdopted }: Props) {
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Логин/пароль шифруются и используются только агентом в вашей сети, чтобы получить видеопоток.
+            Не знаете логин/пароль? Частый вариант — <b>admin</b> и <b>пустой пароль</b>. Точные — в родном
+            приложении камеры. Всё шифруется и используется только агентом в вашей сети, чтобы получить поток.
           </p>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>

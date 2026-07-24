@@ -90,6 +90,24 @@ function CamerasPage() {
         </Card>
       )}
 
+      {/* Помощь: если камера не нашлась (самая частая точка затыка) */}
+      <details className="text-sm text-muted-foreground rounded-md border bg-muted/30 p-3">
+        <summary className="cursor-pointer font-medium text-foreground">Не видите свою камеру?</summary>
+        <ol className="list-decimal pl-5 mt-2 space-y-1">
+          <li>Камера и bridge в одной сети (Wi-Fi обычно 2.4 ГГц, не 5 ГГц)?</li>
+          <li>
+            Включён ли <b>ONVIF</b> в приложении камеры? У многих он выключен с завода — включается одним
+            тумблером (напр. V380: Настройки → Дополнительно → ONVIF).
+          </li>
+          <li>
+            Bridge запущен на <b>Linux</b> с <code>--network host</code>? На Mac авто-поиск камер не работает —
+            добавьте камеру вручную.
+          </li>
+          <li>Логин/пароль не знаете? Частый вариант — <b>admin</b> и пустой пароль.</li>
+          <li>Всё равно нет — «Добавить камеру» → «Вручную» и вставьте RTSP-ссылку камеры.</li>
+        </ol>
+      </details>
+
       {cameras === null ? (
         <p className="text-muted-foreground">Загрузка…</p>
       ) : cameras.length === 0 ? (
