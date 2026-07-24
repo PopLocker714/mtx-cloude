@@ -72,12 +72,12 @@ services:
       MTX_WEBRTCADDITIONALHOSTS: "${SERVER_HOST}"
       # Внешний авторизатор — наш backend. Без него MediaMTX не пустит никого.
       MTX_AUTHHTTPADDRESS: "http://backend:9998/internal/mediamtx-auth"
-      # ── Включить RTSPS-ингест (H1): раскомментировать + смонтировать cert ниже + INGEST_SCHEME=rtsps на backend ──
-      # MTX_RTSPENCRYPTION: "optional"     # optional = 8554 (старые агенты) + 8322 (RTSPS) одновременно
-      # MTX_RTSPTRANSPORTS: "tcp"
-      # MTX_RTSPSADDRESS: ":8322"
-      # MTX_RTSPSERVERCERT: "/certs/ingest.crt"
-      # MTX_RTSPSERVERKEY: "/certs/ingest.key"
+      # ── RTSPS-ингест (H1) ВКЛючён: серт выпущен acme.sh в том ingest-certs (/certs/ingest.*) ──
+      MTX_RTSPENCRYPTION: "optional"     # optional = 8554 (старые агенты) + 8322 (RTSPS) одновременно
+      MTX_RTSPTRANSPORTS: "tcp"
+      MTX_RTSPSADDRESS: ":8322"
+      MTX_RTSPSERVERCERT: "/certs/ingest.crt"
+      MTX_RTSPSERVERKEY: "/certs/ingest.key"
     volumes:
       - ./mediamtx/mediamtx.yml:/mediamtx.yml:ro
       - recordings:/recordings
