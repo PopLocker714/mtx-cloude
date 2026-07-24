@@ -50,8 +50,9 @@ function BridgesPage() {
     }
   }
 
+  // --network host нужен для ONVIF-автообнаружения (multicast). На Linux (мини-ПК/Pi) работает.
   const dockerCmd = created
-    ? `docker run -d --name oko-bridge --restart unless-stopped \\\n  -e OKO_API=${API_BASE} -e OKO_PAIR_CODE=${created.code} \\\n  -v oko-bridge-data:/data oko-bridge:latest`
+    ? `docker run -d --name oko-bridge --restart unless-stopped --network host \\\n  -e OKO_API=${API_BASE} -e OKO_PAIR_CODE=${created.code} \\\n  -v oko-bridge-data:/data ghcr.io/poplocker714/oko-bridge:latest`
     : "";
   // QR для привязки: приложение-бридж (или бридж со сканером) читает адрес API и одноразовый код.
   const qrPayload = created ? JSON.stringify({ t: "oko-bridge", api: API_BASE, code: created.code }) : "";
