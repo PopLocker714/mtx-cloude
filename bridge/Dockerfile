@@ -2,19 +2,17 @@ FROM oven/bun:1.3-alpine
 WORKDIR /app
 
 # ffmpeg — форвардинг RTSP; tini — reaper для дочерних ffmpeg; ca-certificates — доверенный
-# CA-стор для верификации сертификата при rtsps-ингесте (-tls_verify 1). Явно, а не транзитивно
-# от ffmpeg: чтобы TLS-верификация (защита от MITM) не сломалась молча при смене зависимостей.
-RUN apk add --no-cache ffmpeg tini ca-certificates && update-ca-certificates
+# CA-стор для верификации сертификата при rtsps-ингесте (-tls_verify 1); su-exec — сброс до bun.
+RUN apk add --no-cache ffmpeg tini ca-certificates su-exec && update-ca-certificates
 
 COPY package.json ./
 COPY src ./src
+COPY docker-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh && mkdir -p /data
 
-# Состояние (bridge-токен) — в volume /data. Создаём каталог и отдаём его пользователю bun
-# ДО объявления VOLUME/USER — иначе том монтируется под root и агент падает с EACCES при
-# записи state.json (контейнер бежит под non-root bun).
-RUN mkdir -p /data && chown bun:bun /data
+# Состояние (bridge-токен) — в volume /data. Владельца /data чинит entrypoint под root на
+# КАЖДОМ старте, затем процесс роняется до непривилегированного bun — устойчиво к тому,
+# созданному под root (иначе EACCES при записи state.json на non-root).
 VOLUME /data
-USER bun
-
-ENTRYPOINT ["/sbin/tini", "--"]
+ENTRYPOINT ["/sbin/tini", "--", "/entrypoint.sh"]
 CMD ["bun", "src/index.ts"]
