@@ -9,7 +9,10 @@ RUN apk add --no-cache ffmpeg tini ca-certificates && update-ca-certificates
 COPY package.json ./
 COPY src ./src
 
-# Состояние (bridge-токен) — в volume /data.
+# Состояние (bridge-токен) — в volume /data. Создаём каталог и отдаём его пользователю bun
+# ДО объявления VOLUME/USER — иначе том монтируется под root и агент падает с EACCES при
+# записи state.json (контейнер бежит под non-root bun).
+RUN mkdir -p /data && chown bun:bun /data
 VOLUME /data
 USER bun
 
