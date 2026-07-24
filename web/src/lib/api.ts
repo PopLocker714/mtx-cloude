@@ -126,6 +126,9 @@ export async function listArchive(path: string, token: string): Promise<ArchiveS
   const res = await fetch(`${ARCHIVE_BASE}/list?path=${encodeURIComponent(path)}`, {
     headers: { Authorization: basic(token) },
   });
+  // Записей ещё нет → MediaMTX отдаёт 400/404 (директория /recordings/<path> не создана).
+  // Это не ошибка, а пустой архив — UI покажет дружелюбное «Записей пока нет».
+  if (res.status === 400 || res.status === 404) return [];
   if (!res.ok) throw new Error("Ошибка архива: " + res.status);
   return res.json();
 }
