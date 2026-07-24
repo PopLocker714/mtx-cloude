@@ -27,6 +27,7 @@ services:
       BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET}"
       TRUSTED_ORIGINS: "${TRUSTED_ORIGINS}"
       INGEST_HOST: "${INGEST_HOST}"
+      INGEST_SCHEME: "${INGEST_SCHEME}"   # rtsp (дефолт, если пусто) | rtsps (H1, TLS-ингест)
       BRIDGE_SECRET_KEY: "${BRIDGE_SECRET_KEY}"
       ADMIN_EMAIL: "${ADMIN_EMAIL}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
@@ -80,8 +81,23 @@ services:
     volumes:
       - ./mediamtx/mediamtx.yml:/mediamtx.yml:ro
       - recordings:/recordings
-      # - ./certs:/certs:ro   # cert для RTSPS (см. .env.example: выдача Let's Encrypt для ingest-домена)
+      - ingest-certs:/certs:ro   # cert от acme.sh для RTSPS (пусто до первого выпуска — MediaMTX стартует на plaintext)
+
+  # ── Выпуск и авто-продление TLS-серта для RTSPS-ингеста (H1) через Let's Encrypt DNS-01 (Cloudflare) ──
+  # Кладёт cert в общий том ingest-certs; MediaMTX подхватывает обновление БЕЗ рестарта (hot-reload проверен).
+  # Первый выпуск — вручную один раз (см. docs/INGEST_TLS.md), дальше `daemon` продлевает сам.
+  acme:
+    image: neilpang/acme.sh:latest
+    restart: unless-stopped
+    environment:
+      CF_Token: "${CF_DNS_API_TOKEN}"   # Cloudflare API-токен (Zone:DNS:Edit + Zone:Read). Значение — в .env, НЕ в git.
+    volumes:
+      - ingest-certs:/certs
+      - acme-data:/acme.sh
+    command: daemon
 
 volumes:
   recordings:
   pgdata:
+  ingest-certs:
+  acme-data:

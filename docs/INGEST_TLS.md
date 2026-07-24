@@ -37,56 +37,34 @@ MediaMTX сам терминирует TLS на :8322 реальным Let's Enc
 Создай в Cloudflare API-токен со scope **Zone:DNS:Edit + Zone:Read** для зоны `poploker.ru`.
 В Dokploy env: `CF_DNS_API_TOKEN=<токен>`.
 
-### 2. docker-compose — сервис выпуска серта + включение RTSPS
+### 2. docker-compose — УЖЕ СОБРАНО
 
-Добавить сервис `acme` и общий volume; в `mediamtx` включить RTSPS-env + смонтировать серты:
+Сервис `acme`, тома `ingest-certs`/`acme-data`, монтирование серта в MediaMTX и проброс
+`INGEST_SCHEME` в backend — уже в `docker-compose.yml`. Порт `8322:8322` опубликован.
+Осталось выставить `CF_DNS_API_TOKEN` в `.env` и (после выпуска серта, шаг 3) **раскомментировать
+RTSPS-env в сервисе `mediamtx`** (блок `MTX_RTSPENCRYPTION`/`MTX_RTSPS*`).
 
-```yaml
-services:
-  acme:
-    image: neilpang/acme.sh:latest
-    restart: unless-stopped
-    environment:
-      CF_Token: "${CF_DNS_API_TOKEN}"      # Cloudflare API token (Zone:DNS:Edit + Zone:Read)
-    volumes:
-      - ingest-certs:/certs                # сюда acme.sh кладёт ingest.crt/ingest.key
-      - acme-data:/acme.sh                 # состояние acme.sh (аккаунт, серты, cron)
-    command: daemon                        # cron авто-продления внутри контейнера
-
-  mediamtx:
-    # ... существующее ...
-    environment:
-      # ... существующее (MTX_WEBRTCADDITIONALHOSTS, MTX_AUTHHTTPADDRESS) ...
-      MTX_RTSPENCRYPTION: "optional"       # переход: слушает и :8554 (старые агенты), и :8322 (RTSPS)
-      MTX_RTSPTRANSPORTS: "tcp"
-      MTX_RTSPSADDRESS: ":8322"
-      MTX_RTSPSERVERCERT: "/certs/ingest.crt"
-      MTX_RTSPSERVERKEY: "/certs/ingest.key"
-    volumes:
-      - ./mediamtx/mediamtx.yml:/mediamtx.yml:ro
-      - recordings:/recordings
-      - ingest-certs:/certs:ro             # читает cert, положенный acme.sh
-
-volumes:
-  recordings:
-  pgdata:
-  ingest-certs:
-  acme-data:
-```
-Порт `8322:8322` уже опубликован в docker-compose.
+> **Про Dokploy (частый вопрос):** ингест **НЕ** надо добавлять как «домен» в Dokploy и **НЕ** надо
+> включать там TLS. Домен `ingest.tunnel.poploker.ru` и так резолвится на хост (wildcard-A, DNS-only),
+> а порт 8322 публикуется docker-compose'ом напрямую. TLS для ингеста делает **сам MediaMTX**
+> (серт от acme.sh), а не Traefik/Dokploy. Dokploy-«домены» и их LE — это для HTTP-приложений через
+> Traefik (api/app/live/archive), к сырому TCP-ингесту они не относятся. Единственное про сеть:
+> убедись, что порт **8322 открыт на файрволе хоста** (как сейчас открыт 8554).
 
 ### 3. Первый выпуск сертификата (один раз)
 
 ```bash
-# зарегистрировать аккаунт (один раз)
+# аккаунт LE (один раз)
 docker compose exec acme --register-account -m you@example.com --server letsencrypt
-# выпустить cert через DNS-01 (Cloudflare) и УСТАНОВИТЬ в volume (пути запоминаются для авто-renew)
-docker compose exec acme --issue --dns dns_cf -d ingest.tunnel.poploker.ru --server letsencrypt \
-  --key-file /certs/ingest.key --fullchain-file /certs/ingest.crt
-docker compose restart mediamtx     # первый раз — чтобы MediaMTX увидел появившийся cert
+# выпуск через DNS-01 (Cloudflare) — acme.sh сам создаст/уберёт TXT-запись через API
+docker compose exec acme --issue --dns dns_cf -d ingest.tunnel.poploker.ru --server letsencrypt
+# установка серта в общий том + сохранение путей (при renew acme.sh переустановит их сам)
+docker compose exec acme --install-cert -d ingest.tunnel.poploker.ru \
+  --key-file /certs/ingest.key --fullchain-file /certs/ingest.crt --reloadcmd "true"
 ```
-Дальше acme.sh (`daemon`) продлевает сам; при renew переустанавливает в `/certs` те же файлы →
-MediaMTX подхватывает без рестарта. `--reloadcmd` не нужен (hot-reload).
+`--reloadcmd "true"` — no-op: MediaMTX подхватывает новый cert БЕЗ рестарта (hot-reload проверен).
+Дальше `daemon` продлевает и переустанавливает автоматически. После первого выпуска — раскомментируй
+RTSPS-env в `mediamtx` (шаг 2) и передеплой MediaMTX (первый раз, чтобы поднять :8322-листенер).
 
 ### 4. backend
 
