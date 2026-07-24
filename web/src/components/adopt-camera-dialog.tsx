@@ -84,7 +84,7 @@ export function AdoptCameraDialog({ camera, onOpenChange, onAdopted }: Props) {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="off"
                 autoFocus
-                required
+                placeholder="можно пусто (ONVIF)"
               />
             </div>
           </div>
@@ -93,7 +93,7 @@ export function AdoptCameraDialog({ camera, onOpenChange, onAdopted }: Props) {
           </p>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
-            <Button type="submit" disabled={busy || !password}>
+            <Button type="submit" disabled={busy}>
               {busy ? "Подключаю…" : "Подключить"}
             </Button>
           </DialogFooter>

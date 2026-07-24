@@ -287,8 +287,10 @@ api.post("/discovered/:id/adopt", async (c) => {
   const id = c.req.param("id");
   if (!UUID_RE.test(id)) return c.json({ error: "неверный id" }, 400);
   const { name, username, password } = await c.req.json().catch(() => ({}));
-  if (typeof username !== "string" || !username.trim() || typeof password !== "string" || !password) {
-    return c.json({ error: "нужны логин и пароль камеры" }, 400);
+  // Пароль МОЖЕТ быть пустым — часть ONVIF-камер (напр. V380 с ONVIF) имеет admin с пустым паролем.
+  // Требуем только логин + чтобы password был строкой (пустая допустима). Поймано живым тестом на железе.
+  if (typeof username !== "string" || !username.trim() || typeof password !== "string") {
+    return c.json({ error: "нужен логин камеры" }, 400);
   }
   const [d] = await db.select().from(schema.discoveredCameras).where(eq(schema.discoveredCameras.id, id)).limit(1);
   if (!d) return c.json({ error: "не найдено" }, 404);
