@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, isNotNull } from "drizzle-orm";
 import { db, schema } from "../db";
 import { hashToken, ingestUrl, decryptSecret, isRtspUrl, HEARTBEAT_MS, rateLimit, realIp } from "../lib";
 import { setRecording } from "../mediamtx";
@@ -87,6 +87,21 @@ async function ingestDiscovered(b: BridgeRow, devices: unknown[]) {
         target: [schema.discoveredCameras.bridgeId, schema.discoveredCameras.deviceKey],
         set: meta,
       });
+
+    // Само-исцеление при смене IP (DHCP): ONVIF-urn (deviceKey) стабилен, а xaddr несёт свежий IP.
+    // Если находка уже усыновлена (cameraId) и камера в ONVIF-режиме — обновляем её onvif_url на
+    // новый адрес → агент резолвит RTSP по актуальному IP без ручного вмешательства.
+    const [dc] = await db
+      .select({ cameraId: schema.discoveredCameras.cameraId })
+      .from(schema.discoveredCameras)
+      .where(and(eq(schema.discoveredCameras.bridgeId, b.id), eq(schema.discoveredCameras.deviceKey, deviceKey)))
+      .limit(1);
+    if (dc?.cameraId) {
+      await db
+        .update(schema.cameras)
+        .set({ onvifUrl })
+        .where(and(eq(schema.cameras.id, dc.cameraId), isNotNull(schema.cameras.onvifUrl)));
+    }
   }
 }
 
