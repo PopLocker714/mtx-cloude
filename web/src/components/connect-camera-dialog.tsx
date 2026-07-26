@@ -232,6 +232,10 @@ export function ConnectCameraDialog({ open, onOpenChange, existingId, onCreated 
                   <p className="text-xs text-muted-foreground">
                     Логин/пароль камеры шифруются. Bridge заберёт поток из локальной сети и отправит в облако.
                   </p>
+                  <p className="text-xs text-amber-600 dark:text-amber-500">
+                    Совет: закрепите IP камеры на роутере (DHCP-резервация) — иначе при смене адреса ссылка
+                    перестанет работать. Как — в разделе «Как подключить камеру».
+                  </p>
                 </div>
               </>
             ))}
