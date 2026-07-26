@@ -13,7 +13,7 @@
 set -eu
 
 OKO_API="${OKO_API:-https://api.tunnel.poploker.ru}"
-OKO_RELEASES="${OKO_RELEASES:-https://github.com/PopLocker714/mtx-cloude/releases/latest/download}"
+OKO_RELEASES="${OKO_RELEASES:-https://github.com/PopLocker714/oko-bridge/releases/latest/download}"
 BIN=/usr/local/bin/oko-bridge
 DATA=/var/lib/oko-bridge
 UNIT=/etc/systemd/system/oko-bridge.service
