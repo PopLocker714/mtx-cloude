@@ -7,6 +7,7 @@ import { api } from "./routes/api";
 import { bridgeApi } from "./routes/bridge";
 import { stubAuth } from "./routes/stub-auth";
 import { telegramWebhook } from "./routes/telegram-webhook";
+import { install } from "./routes/install";
 import { startReconcile } from "./reconcile";
 
 // Бутстрап при старте: админ из env + fail-closed проверка ключа шифрования creds.
@@ -38,6 +39,9 @@ app.onError((err, c) => {
 });
 
 app.get("/health", (c) => c.json({ ok: true, service: "oko-cloud-backend" }));
+
+// Публичный установщик bridge одной командой: curl -fsSL <api>/install.sh | OKO_PAIR_CODE=… sh
+app.route("/install.sh", install);
 
 // Better Auth: регистрация/логин/сессии на /api/auth/** (sign-up/email, sign-in/email, ...).
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));

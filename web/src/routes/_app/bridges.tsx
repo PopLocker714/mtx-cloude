@@ -50,7 +50,8 @@ function BridgesPage() {
     }
   }
 
-  // --network host нужен для ONVIF-автообнаружения (multicast). На Linux (мини-ПК/Pi) работает.
+  // Установка одной командой (основной путь). --network host нужен для ONVIF-обнаружения (Linux).
+  const installCmd = created ? `curl -fsSL ${API_BASE}/install.sh | OKO_PAIR_CODE=${created.code} sh` : "";
   const dockerCmd = created
     ? `docker run -d --name oko-bridge --restart unless-stopped --network host \\\n  -e OKO_API=${API_BASE} -e OKO_PAIR_CODE=${created.code} \\\n  -v oko-bridge-data:/data ghcr.io/poplocker714/oko-bridge:latest`
     : "";
@@ -159,12 +160,23 @@ function BridgesPage() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Команда запуска (Docker)</Label>
-              <pre className="rounded-md bg-muted p-3 text-xs font-mono whitespace-pre-wrap break-all">{dockerCmd}</pre>
-              <Button type="button" variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(dockerCmd)}>
+              <Label className="text-xs text-muted-foreground">Установка одной командой (Linux — мини-ПК / Raspberry Pi)</Label>
+              <pre className="rounded-md bg-muted p-3 text-xs font-mono whitespace-pre-wrap break-all">{installCmd}</pre>
+              <Button type="button" variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(installCmd)}>
                 <Copy className="size-4" /> Копировать команду
               </Button>
+              <p className="text-xs text-muted-foreground">
+                Скрипт сам поставит Docker (если нужно), запустит bridge и привяжет его к аккаунту. Дальше камеры
+                найдутся автоматически.
+              </p>
             </div>
+            <details className="text-xs text-muted-foreground">
+              <summary className="cursor-pointer">…или запустить вручную через Docker</summary>
+              <pre className="rounded-md bg-muted p-3 mt-2 font-mono whitespace-pre-wrap break-all">{dockerCmd}</pre>
+              <Button type="button" variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(dockerCmd)}>
+                <Copy className="size-4" /> Копировать
+              </Button>
+            </details>
             <p className="text-xs text-muted-foreground">
               После привязки токен сохранится на устройстве — код больше не нужен. Дальше добавляйте камеры в кабинете
               с их RTSP-ссылкой, выбирая этот bridge.
