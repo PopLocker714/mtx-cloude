@@ -57,6 +57,20 @@ command -v ffmpeg >/dev/null 2>&1 || die "ffmpeg не установился (н
 info "скачиваю bridge (${ASSET})…"
 TMP="$(mktemp)"
 curl -fsSL "${OKO_RELEASES}/${ASSET}" -o "$TMP" || die "не удалось скачать бинарник (${OKO_RELEASES}/${ASSET}). Релиз опубликован и доступен публично?"
+
+# Проверка целостности: сверяем SHA256 с SHA256SUMS.txt из релиза. Ловит порчу/обрыв закачки
+# (важно для root-установки через curl|sh). Если файла сумм нет (старый релиз) — не блокируем.
+SUMS="$(mktemp)"
+if curl -fsSL "${OKO_RELEASES}/SHA256SUMS.txt" -o "$SUMS" 2>/dev/null; then
+  EXPECT="$(grep -E "[[:space:]]${ASSET}\$" "$SUMS" | awk '{print $1}' | head -1)"
+  if [ -n "$EXPECT" ]; then
+    ACTUAL="$( (sha256sum "$TMP" 2>/dev/null || shasum -a 256 "$TMP") | awk '{print $1}')"
+    [ "$EXPECT" = "$ACTUAL" ] || die "контрольная сумма не совпала — прерываю (ожидалось $EXPECT, получено $ACTUAL)"
+    info "контрольная сумма ок"
+  fi
+fi
+rm -f "$SUMS"
+
 $ROOT install -m 0755 "$TMP" "$BIN"
 rm -f "$TMP"
 $ROOT mkdir -p "$DATA"
