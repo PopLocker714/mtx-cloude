@@ -1,5 +1,5 @@
 // Конфиг агента из env. На первом старте нужен OKO_API + OKO_PAIR_CODE (или уже сохранённый state).
-export const AGENT_VERSION = "0.3.0"; // Этап 3: детекция движения (умная запись + уведомления)
+export const AGENT_VERSION = "0.4.0"; // Этап 4: нативная установка бинарником + systemd (без Docker)
 
 function req(name: string): string {
   const v = process.env[name];
