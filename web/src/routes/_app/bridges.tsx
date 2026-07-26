@@ -166,8 +166,8 @@ function BridgesPage() {
                 <Copy className="size-4" /> Копировать команду
               </Button>
               <p className="text-xs text-muted-foreground">
-                Скрипт сам поставит Docker (если нужно), запустит bridge и привяжет его к аккаунту. Дальше камеры
-                найдутся автоматически.
+                Скрипт скачает нативный агент под вашу систему, поставит ffmpeg, поднимет сервис с автозапуском
+                (systemd) и привяжет bridge к аккаунту. Docker не нужен. Дальше камеры найдутся автоматически.
               </p>
             </div>
             <details className="text-xs text-muted-foreground">
