@@ -71,6 +71,83 @@ api.post("/bridges/pair", async (c) => {
   return c.json({ bridgeId: b.id, token: raw }); // raw показан единственный раз
 });
 
+// ─── Обратная привязка: устройство регистрируется само, владелец забирает его позже ───
+// Зачем: код из ЛК живёт 15 минут и требует, чтобы кабинет и железо были в руках
+// одновременно. На объекте так не бывает — коробку ставит монтажник, аккаунт заводит
+// владелец. Здесь поток развёрнут: мост объявляет себя, человек забирает когда удобно.
+
+// --- Мост регистрируется сам → deviceCode (человеку) + deviceSecret (только устройству) ---
+api.post("/bridges/register", async (c) => {
+  if (!rateLimit(`register:${clientIp(c)}`, 5, 60_000)) return c.json({ error: "слишком много попыток" }, 429);
+  const { name, agentVersion } = await c.req.json().catch(() => ({}));
+  const secret = bridgeToken();
+  const [b] = await db
+    .insert(schema.bridges)
+    .values({
+      userId: null, // без владельца: до забора строка не даёт никаких прав
+      name: cleanName(name, "Новое устройство"),
+      deviceCode: pairingCode(),
+      deviceSecretHash: hashToken(secret),
+      agentVersion: typeof agentVersion === "string" ? agentVersion.slice(0, 40) : null,
+      lastIp: clientIp(c),
+    })
+    .returning();
+  return c.json({ deviceCode: b.deviceCode, deviceSecret: secret }); // секрет отдан единственный раз
+});
+
+// --- Владелец забирает устройство по коду с экрана/из лога ---
+api.post("/bridges/claim", async (c) => {
+  const u = await requireUser(c);
+  if (!u) return c.json({ error: "нужна авторизация" }, 401);
+  if (!rateLimit(`claim:${u.id}`, 10, 60_000)) return c.json({ error: "слишком много попыток" }, 429);
+  const { deviceCode, name } = await c.req.json().catch(() => ({}));
+  const code = typeof deviceCode === "string" ? deviceCode.trim().toUpperCase().replace(/-/g, "") : "";
+  if (code.length !== 8) return c.json({ error: "неверный код" }, 400);
+  // Атомарно: код гасится тем же UPDATE, что назначает владельца — двое одновременно не заберут.
+  const [claimed] = await db
+    .update(schema.bridges)
+    .set({
+      userId: u.id,
+      name: cleanName(name, "Новое устройство"),
+      deviceCode: null,
+      claimedAt: new Date(),
+    })
+    .where(and(eq(schema.bridges.deviceCode, code), isNull(schema.bridges.userId)))
+    .returning();
+  if (!claimed) return c.json({ error: "устройство не найдено или уже забрано" }, 404);
+  return c.json({ id: claimed.id, name: claimed.name });
+});
+
+// --- Мост опрашивает статус своим секретом; после забора получает боевой токен ---
+api.get("/bridges/claim-status", async (c) => {
+  if (!rateLimit(`claimstatus:${clientIp(c)}`, 60, 60_000)) return c.json({ error: "слишком много попыток" }, 429);
+  const auth = c.req.header("authorization") || "";
+  const secret = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  if (!secret) return c.json({ error: "нужен секрет устройства" }, 401);
+  const [b] = await db
+    .select()
+    .from(schema.bridges)
+    .where(eq(schema.bridges.deviceSecretHash, hashToken(secret)))
+    .limit(1);
+  if (!b) return c.json({ error: "неизвестное устройство" }, 401);
+  if (!b.claimedAt || !b.userId) return c.json({ claimed: false });
+  const raw = bridgeToken();
+  // Секрет одноразовый: гасим его тем же UPDATE, которым выдаём токен.
+  const [issued] = await db
+    .update(schema.bridges)
+    .set({
+      deviceSecretHash: null,
+      pairedAt: new Date(),
+      lastSeen: new Date(),
+      tokenHash: hashToken(raw),
+      tokenPrefix: raw.slice(0, 8),
+    })
+    .where(and(eq(schema.bridges.id, b.id), eq(schema.bridges.deviceSecretHash, hashToken(secret))))
+    .returning();
+  if (!issued) return c.json({ error: "секрет уже использован" }, 401);
+  return c.json({ claimed: true, bridgeId: issued.id, token: raw }); // raw показан единственный раз
+});
+
 // --- Список моих bridge (без секретов), online деривируется ---
 api.get("/bridges", async (c) => {
   const u = await requireUser(c);

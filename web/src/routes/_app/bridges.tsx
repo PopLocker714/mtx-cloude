@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Server, Plus, Copy, Circle, Trash2, Ban } from "lucide-react";
+import { Server, Plus, Copy, Circle, Trash2, Ban, Download } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-import { listBridges, createBridge, revokeBridge, deleteBridge, type Bridge } from "@/lib/api";
+import { listBridges, createBridge, claimBridge, revokeBridge, deleteBridge, type Bridge } from "@/lib/api";
 import { API_BASE } from "@/lib/api-base";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,6 +25,11 @@ function BridgesPage() {
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<{ code: string } | null>(null);
   const [creating, setCreating] = useState(false);
+  // Забор устройства, которое поставили заранее и которое ждёт владельца.
+  const [claimOpen, setClaimOpen] = useState(false);
+  const [claimCode, setClaimCode] = useState("");
+  const [claiming, setClaiming] = useState(false);
+  const [claimError, setClaimError] = useState<string | null>(null);
 
   async function refresh() {
     try {
@@ -50,8 +55,25 @@ function BridgesPage() {
     }
   }
 
+  async function claim() {
+    setClaiming(true);
+    setClaimError(null);
+    try {
+      await claimBridge(claimCode);
+      setClaimOpen(false);
+      setClaimCode("");
+      await refresh();
+    } catch (e) {
+      setClaimError((e as Error).message);
+    } finally {
+      setClaiming(false);
+    }
+  }
+
   // Установка одной командой (основной путь). --network host нужен для ONVIF-обнаружения (Linux).
-  const installCmd = created ? `curl -fsSL ${API_BASE}/install.sh | OKO_PAIR_CODE=${created.code} sh` : "";
+  // Короткая форма /i/КОД: вдвое меньше символов — команду часто набирают руками
+  // на мини-ПК, где нет буфера обмена.
+  const installCmd = created ? `curl -fsSL ${API_BASE}/i/${created.code} | sh` : "";
   const dockerCmd = created
     ? `docker run -d --name oko-bridge --restart unless-stopped --network host \\\n  -e OKO_API=${API_BASE} -e OKO_PAIR_CODE=${created.code} \\\n  -v oko-bridge-data:/data ghcr.io/poplocker714/oko-bridge:latest`
     : "";
@@ -64,9 +86,14 @@ function BridgesPage() {
         <h1 className="flex items-center gap-2 text-2xl font-semibold">
           <Server className="size-5" /> Bridge
         </h1>
-        <Button onClick={add} disabled={creating}>
-          <Plus className="size-4" /> Добавить bridge
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setClaimOpen(true)}>
+            <Download className="size-4" /> Забрать устройство
+          </Button>
+          <Button onClick={add} disabled={creating}>
+            <Plus className="size-4" /> Добавить bridge
+          </Button>
+        </div>
       </div>
       <p className="text-sm text-muted-foreground">
         Bridge — маленькая программа на устройстве в сети ваших камер (мини-ПК, Raspberry Pi). Она забирает поток камер
@@ -184,6 +211,37 @@ function BridgesPage() {
           </div>
           <DialogFooter>
             <Button onClick={() => setCreated(null)}>Готово</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Забор устройства: коробку поставили заранее, она показала свой код и ждёт владельца */}
+      <Dialog open={claimOpen} onOpenChange={(v) => { setClaimOpen(v); if (!v) setClaimError(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Забрать устройство</DialogTitle>
+            <DialogDescription>
+              Если bridge уже установлен, он показал код устройства на экране или в логе
+              (<span className="font-mono">journalctl -u oko-bridge</span>). Введите его — устройство привяжется к вашему аккаунту.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="device-code" className="text-xs text-muted-foreground">Код устройства</Label>
+            <input
+              id="device-code"
+              value={claimCode}
+              onChange={(e) => setClaimCode(e.target.value.toUpperCase())}
+              placeholder="ABCD-EFGH"
+              autoFocus
+              className="w-full rounded-md border bg-background px-3 py-2 text-center text-2xl font-mono tracking-widest uppercase"
+            />
+            {claimError && <p className="text-sm text-destructive">{claimError}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setClaimOpen(false)}>Отмена</Button>
+            <Button onClick={claim} disabled={claiming || claimCode.replace(/-/g, "").length !== 8}>
+              {claiming ? "Забираем…" : "Забрать"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,13 +1,15 @@
 #!/bin/sh
 # oko-cloud — установка bridge-агента одной командой (нативный бинарник, БЕЗ Docker).
 #
-#   curl -fsSL https://api.tunnel.poploker.ru/install.sh | OKO_PAIR_CODE=КОД sh
+#   curl -fsSL https://api.tunnel.poploker.ru/i/КОД | sh     # код уже вшит
+#   curl -fsSL https://api.tunnel.poploker.ru/install.sh | sh  # без кода: устройство покажет свой
 #
 # Что делает: скачивает бинарник под твою ОС/архитектуру, ставит ffmpeg, поднимает
 # systemd-сервис с автозапуском и привязкой по коду. Docker не требуется.
 #
 # Переменные:
-#   OKO_PAIR_CODE — одноразовый код привязки из личного кабинета (нужен на ПЕРВУЮ установку)
+#   OKO_PAIR_CODE — одноразовый код привязки из личного кабинета (НЕ обязателен: без него
+#                   устройство покажет собственный код, который вводят в кабинете)
 #   OKO_API       — адрес API oko-cloud (по умолчанию прод)
 #   OKO_RELEASES  — база GitHub-релизов с бинарниками (по умолчанию репозиторий проекта)
 set -eu
@@ -35,10 +37,13 @@ esac
 ASSET="oko-bridge-linux-${ARCH}"
 info "система: linux ${ARCH}"
 
-# Код привязки нужен на первую установку (пока нет сохранённого состояния)
+# Код привязки НЕ обязателен. Если его нет — устройство зарегистрируется само и покажет
+# собственный код, который владелец вводит в кабинете когда ему удобно. Это снимает
+# требование держать кабинет и коробку в руках одновременно.
+CLAIM_MODE=0
 if [ ! -f "$DATA/state.json" ] && [ -z "${OKO_PAIR_CODE:-}" ]; then
-  die "нужен код привязки. Возьми его в ЛК (Bridge → «Добавить») и запусти:
-    curl -fsSL ${OKO_API}/install.sh | OKO_PAIR_CODE=ТВОЙ_КОД sh"
+  CLAIM_MODE=1
+  info "код привязки не задан — устройство покажет свой код после запуска"
 fi
 
 # ffmpeg (нужен bridge для форвардинга). Ставим системным пакетным менеджером.
@@ -101,6 +106,25 @@ $ROOT systemctl enable --now oko-bridge >/dev/null 2>&1 || $ROOT systemctl resta
 sleep 3
 if $ROOT systemctl is-active --quiet oko-bridge; then
   info "✓ bridge установлен и запущен (systemd)."
+  # Без кода привязки агент печатает код устройства — вылавливаем его из журнала и
+  # показываем прямо здесь, чтобы человеку не пришлось лезть в journalctl.
+  if [ "$CLAIM_MODE" = "1" ]; then
+    CODE=""
+    i=0
+    while [ $i -lt 15 ]; do
+      CODE="$($ROOT journalctl -u oko-bridge -n 100 --no-pager 2>/dev/null \
+        | grep -o 'КОД УСТРОЙСТВА:  [A-Z0-9-]*' | tail -1 | awk '{print $3}')"
+      [ -n "$CODE" ] && break
+      i=$((i + 1))
+      sleep 1
+    done
+    if [ -n "$CODE" ]; then
+      printf '\n  \033[1mКОД УСТРОЙСТВА: %s\033[0m\n' "$CODE"
+      info "  Введите его: личный кабинет → Bridge → «Забрать устройство»"
+    else
+      info "  Код устройства: journalctl -u oko-bridge -n 50 | grep 'КОД УСТРОЙСТВА'"
+    fi
+  fi
   info "  Логи:      journalctl -u oko-bridge -f"
   info "  Статус:    systemctl status oko-bridge"
   info "  Дальше:    личный кабинет → «Камеры» → «Найдена камера» → «Подключить»"

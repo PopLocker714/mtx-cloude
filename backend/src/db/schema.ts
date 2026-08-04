@@ -83,6 +83,12 @@ export const bridges = pgTable("bridges", {
   // pairingCode — одноразовый (после привязки → null) и с TTL (pairingExpiresAt).
   pairingCode: text("pairing_code").unique(),
   pairingExpiresAt: timestamp("pairing_expires_at", { withTimezone: true }),
+  // Обратный поток привязки: мост регистрируется сам (user_id пуст), показывает deviceCode
+  // человеку, владелец забирает устройство в ЛК. deviceSecret знает только устройство —
+  // в БД лежит его хэш, как и у токена. После выдачи токена оба поля гасятся.
+  deviceCode: text("device_code").unique(),
+  deviceSecretHash: text("device_secret_hash").unique(),
+  claimedAt: timestamp("claimed_at", { withTimezone: true }),
   // Токен генерится при /pair; в БД только SHA-256 хэш (сырой показан один раз). token — legacy, nullable.
   token: text("token").unique(),
   tokenHash: text("token_hash").unique(),

@@ -118,6 +118,13 @@ ALTER TABLE bridges ADD COLUMN IF NOT EXISTS revoked_at    timestamptz;
 ALTER TABLE bridges ADD COLUMN IF NOT EXISTS agent_version text;
 ALTER TABLE bridges ADD COLUMN IF NOT EXISTS last_ip       text;
 CREATE UNIQUE INDEX IF NOT EXISTS bridges_token_hash_idx ON bridges(token_hash);
+-- Обратная привязка: мост регистрируется сам и ждёт, пока владелец заберёт его в ЛК.
+-- user_id у такой строки пуст до забора, поэтому bridge-эндпоинты для неё закрыты.
+ALTER TABLE bridges ADD COLUMN IF NOT EXISTS device_code        text;
+ALTER TABLE bridges ADD COLUMN IF NOT EXISTS device_secret_hash text;
+ALTER TABLE bridges ADD COLUMN IF NOT EXISTS claimed_at         timestamptz;
+CREATE UNIQUE INDEX IF NOT EXISTS bridges_device_code_idx   ON bridges(device_code);
+CREATE UNIQUE INDEX IF NOT EXISTS bridges_device_secret_idx ON bridges(device_secret_hash);
 -- Камеры: источник (RTSP камеры, зашифрован), desired-state, online-деривация
 ALTER TABLE cameras ADD COLUMN IF NOT EXISTS source_url text;
 ALTER TABLE cameras ADD COLUMN IF NOT EXISTS enabled    boolean NOT NULL DEFAULT true;

@@ -69,6 +69,9 @@ export type Bridge = {
 export const listBridges = (): Promise<Bridge[]> => api("/bridges");
 export const createBridge = (name: string): Promise<{ id: string; name: string; pairingCode: string; expiresInMs: number }> =>
   api("/bridges", { method: "POST", body: JSON.stringify({ name }) });
+// Забор устройства, которое зарегистрировалось само и показало свой код на экране/в логе.
+export const claimBridge = (deviceCode: string, name?: string): Promise<{ id: string; name: string }> =>
+  api("/bridges/claim", { method: "POST", body: JSON.stringify({ deviceCode, name }) });
 export const revokeBridge = (id: string) => api(`/bridges/${id}/revoke`, { method: "POST" });
 export const deleteBridge = (id: string) => api(`/bridges/${id}`, { method: "DELETE" });
 export const createViewToken = (cameraId?: string): Promise<{ token: string; ttlMs: number }> =>
