@@ -1,3 +1,17 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Allow: /
+
+# Кабинет и служебные страницы индексировать незачем: за авторизацией робот
+# видит только форму входа, а дубли форм в выдаче размывают публичные страницы.
+Disallow: /cameras
+Disallow: /camera/
+Disallow: /bridges
+Disallow: /admin
+Disallow: /profile
+Disallow: /login
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+
+Sitemap: https://app.tunnel.poploker.ru/sitemap.xml

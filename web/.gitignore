@@ -11,3 +11,6 @@ dist-ssr
 .vinxi
 __unconfig*
 todos.json
+
+# Paraglide: генерируется из messages/ при сборке (paraglideVitePlugin)
+src/paraglide/

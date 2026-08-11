@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://app.tunnel.poploker.ru/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/"/>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/uk</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/"/>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/how-it-works</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/how-it-works"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/how-it-works"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/how-it-works"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/uk/how-it-works</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/how-it-works"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/how-it-works"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/how-it-works"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/faq</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/faq"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/faq"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/faq"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/uk/faq</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/faq"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/faq"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/faq"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/contact</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/contact"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/contact"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/contact"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/uk/contact</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/contact"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/contact"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/contact"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+</urlset>

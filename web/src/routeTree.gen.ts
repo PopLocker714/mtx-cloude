@@ -11,7 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as FaqRouteImport } from './routes/faq'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -21,6 +24,10 @@ import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppBridgesRouteImport } from './routes/_app/bridges'
 import { Route as AppCamerasRouteImport } from './routes/_app/cameras'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
+import { Route as UkIndexRouteImport } from './routes/uk/index'
+import { Route as UkContactRouteImport } from './routes/uk/contact'
+import { Route as UkFaqRouteImport } from './routes/uk/faq'
+import { Route as UkHowItWorksRouteImport } from './routes/uk/how-it-works'
 import { Route as AppCameraCameraIdRouteImport } from './routes/_app/camera.$cameraId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -32,9 +39,24 @@ const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -82,6 +104,26 @@ const AppProfileRoute = AppProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AppRoute,
 } as any)
+const UkIndexRoute = UkIndexRouteImport.update({
+  id: '/uk/',
+  path: '/uk/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UkContactRoute = UkContactRouteImport.update({
+  id: '/uk/contact',
+  path: '/uk/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UkFaqRoute = UkFaqRouteImport.update({
+  id: '/uk/faq',
+  path: '/uk/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UkHowItWorksRoute = UkHowItWorksRouteImport.update({
+  id: '/uk/how-it-works',
+  path: '/uk/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppCameraCameraIdRoute = AppCameraCameraIdRouteImport.update({
   id: '/camera/$cameraId',
   path: '/camera/$cameraId',
@@ -90,7 +132,10 @@ const AppCameraCameraIdRoute = AppCameraCameraIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/contact': typeof ContactRoute
+  '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -100,11 +145,18 @@ export interface FileRoutesByFullPath {
   '/bridges': typeof AppBridgesRoute
   '/cameras': typeof AppCamerasRoute
   '/profile': typeof AppProfileRoute
+  '/uk/contact': typeof UkContactRoute
+  '/uk/faq': typeof UkFaqRoute
+  '/uk/how-it-works': typeof UkHowItWorksRoute
+  '/uk/': typeof UkIndexRoute
   '/camera/$cameraId': typeof AppCameraCameraIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/contact': typeof ContactRoute
+  '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -114,13 +166,20 @@ export interface FileRoutesByTo {
   '/bridges': typeof AppBridgesRoute
   '/cameras': typeof AppCamerasRoute
   '/profile': typeof AppProfileRoute
+  '/uk/contact': typeof UkContactRoute
+  '/uk/faq': typeof UkFaqRoute
+  '/uk/how-it-works': typeof UkHowItWorksRoute
+  '/uk': typeof UkIndexRoute
   '/camera/$cameraId': typeof AppCameraCameraIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
+  '/contact': typeof ContactRoute
+  '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -130,13 +189,20 @@ export interface FileRoutesById {
   '/_app/bridges': typeof AppBridgesRoute
   '/_app/cameras': typeof AppCamerasRoute
   '/_app/profile': typeof AppProfileRoute
+  '/uk/contact': typeof UkContactRoute
+  '/uk/faq': typeof UkFaqRoute
+  '/uk/how-it-works': typeof UkHowItWorksRoute
+  '/uk/': typeof UkIndexRoute
   '/_app/camera/$cameraId': typeof AppCameraCameraIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/contact'
+    | '/faq'
     | '/forgot-password'
+    | '/how-it-works'
     | '/login'
     | '/privacy'
     | '/reset-password'
@@ -146,11 +212,18 @@ export interface FileRouteTypes {
     | '/bridges'
     | '/cameras'
     | '/profile'
+    | '/uk/contact'
+    | '/uk/faq'
+    | '/uk/how-it-works'
+    | '/uk/'
     | '/camera/$cameraId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/contact'
+    | '/faq'
     | '/forgot-password'
+    | '/how-it-works'
     | '/login'
     | '/privacy'
     | '/reset-password'
@@ -160,12 +233,19 @@ export interface FileRouteTypes {
     | '/bridges'
     | '/cameras'
     | '/profile'
+    | '/uk/contact'
+    | '/uk/faq'
+    | '/uk/how-it-works'
+    | '/uk'
     | '/camera/$cameraId'
   id:
     | '__root__'
     | '/'
     | '/_app'
+    | '/contact'
+    | '/faq'
     | '/forgot-password'
+    | '/how-it-works'
     | '/login'
     | '/privacy'
     | '/reset-password'
@@ -175,18 +255,29 @@ export interface FileRouteTypes {
     | '/_app/bridges'
     | '/_app/cameras'
     | '/_app/profile'
+    | '/uk/contact'
+    | '/uk/faq'
+    | '/uk/how-it-works'
+    | '/uk/'
     | '/_app/camera/$cameraId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  ContactRoute: typeof ContactRoute
+  FaqRoute: typeof FaqRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  HowItWorksRoute: typeof HowItWorksRoute
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
+  UkContactRoute: typeof UkContactRoute
+  UkFaqRoute: typeof UkFaqRoute
+  UkHowItWorksRoute: typeof UkHowItWorksRoute
+  UkIndexRoute: typeof UkIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -205,11 +296,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forgot-password': {
       id: '/forgot-password'
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -275,6 +387,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileRouteImport
       parentRoute: typeof AppRoute
     }
+    '/uk/': {
+      id: '/uk/'
+      path: '/uk'
+      fullPath: '/uk/'
+      preLoaderRoute: typeof UkIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/uk/contact': {
+      id: '/uk/contact'
+      path: '/uk/contact'
+      fullPath: '/uk/contact'
+      preLoaderRoute: typeof UkContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/uk/faq': {
+      id: '/uk/faq'
+      path: '/uk/faq'
+      fullPath: '/uk/faq'
+      preLoaderRoute: typeof UkFaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/uk/how-it-works': {
+      id: '/uk/how-it-works'
+      path: '/uk/how-it-works'
+      fullPath: '/uk/how-it-works'
+      preLoaderRoute: typeof UkHowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/camera/$cameraId': {
       id: '/_app/camera/$cameraId'
       path: '/camera/$cameraId'
@@ -306,12 +446,19 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  ContactRoute: ContactRoute,
+  FaqRoute: FaqRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  HowItWorksRoute: HowItWorksRoute,
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
+  UkContactRoute: UkContactRoute,
+  UkFaqRoute: UkFaqRoute,
+  UkHowItWorksRoute: UkHowItWorksRoute,
+  UkIndexRoute: UkIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
