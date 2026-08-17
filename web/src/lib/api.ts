@@ -110,9 +110,12 @@ export type AuditEntry = {
 export const adminListCameras = (): Promise<AdminCamera[]> => api("/admin/cameras");
 export const adminAudit = (): Promise<AuditEntry[]> => api("/admin/audit");
 
-// --- Заготовка флоу подтверждения email / сброса пароля (стаб-эндпоинты, любой код) ---
-export const stubSendCode = (email: string) =>
-  api("/stub/send-code", { method: "POST", body: JSON.stringify({ email }) });
+// --- Подтверждение email / сброс пароля по одноразовому коду ---
+// Код настоящий (TTL 15 мин, одноразовый); стаб только в доставке — пока
+// писем нет, код печатается в лог бэкенда. purpose разводит два флоу,
+// чтобы код от одного не подошёл к другому.
+export const stubSendCode = (email: string, purpose: "verify-email" | "reset-password" = "verify-email") =>
+  api("/stub/send-code", { method: "POST", body: JSON.stringify({ email, purpose }) });
 export const stubVerifyEmail = (email: string, code: string) =>
   api("/stub/verify-email", { method: "POST", body: JSON.stringify({ email, code }) });
 export const stubResetPassword = (email: string, code: string, newPassword: string) =>

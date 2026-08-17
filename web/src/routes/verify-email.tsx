@@ -30,7 +30,7 @@ function VerifyEmail() {
     setError(null);
     setLoading(true);
     try {
-      await stubVerifyEmail(email, code); // любой код принимается (стаб)
+      await stubVerifyEmail(email, code);
       window.location.href = "/home";
     } catch (err) {
       setError((err as Error).message);

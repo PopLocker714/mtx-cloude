@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { auth } from "./auth";
 import { ensureAdmin, ensureBridgeKey } from "./bootstrap";
+import { purgeExpiredOtp } from "./otp";
 import { mediamtxAuth } from "./routes/mediamtx-auth";
 import { api } from "./routes/api";
 import { bridgeApi } from "./routes/bridge";
@@ -13,6 +14,7 @@ import { startReconcile } from "./reconcile";
 // Бутстрап при старте: админ из env + fail-closed проверка ключа шифрования creds.
 await ensureAdmin();
 await ensureBridgeKey();
+await purgeExpiredOtp(); // протухшие коды подтверждения не копим
 
 // Цикл записи/событий по движению (Этап 3): гейт записи MediaMTX + закрытие событий.
 startReconcile();

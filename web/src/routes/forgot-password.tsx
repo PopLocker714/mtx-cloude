@@ -22,7 +22,7 @@ function ForgotPassword() {
     setError(null);
     setLoading(true);
     try {
-      await stubSendCode(email); // стаб — код не уходит
+      await stubSendCode(email, "reset-password"); // письма нет — код уходит в лог бэкенда
       navigate({ to: "/reset-password", search: { email } });
     } catch (err) {
       setError((err as Error).message);

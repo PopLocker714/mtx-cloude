@@ -29,7 +29,7 @@ function ResetPassword() {
     setError(null);
     setLoading(true);
     try {
-      await stubResetPassword(email, code, password); // любой код (стаб)
+      await stubResetPassword(email, code, password);
       setDone(true);
       setTimeout(() => navigate({ to: "/login" }), 1500);
     } catch (err) {

@@ -340,7 +340,7 @@
   "fp_title": "Password recovery",
   "fp_desc": "Enter your email — we'll send a reset code.",
   "fp_send": "Send code",
-  "fp_stub": "Stub: emails are not sent yet. Any code works.",
+  "fp_stub": "Emails are not sent yet: the code is printed to the server log. Valid for 15 minutes.",
   "fp_back": "← Back to sign in",
   "ve_title": "Email confirmation",
   "ve_desc_sent": "A code was sent to {email}. Enter it below.",
