@@ -65,10 +65,10 @@ export function PricingSection({ locale }: { locale: Locale }) {
   ];
 
   return (
-    <section id="pricing" className="border-t">
+    <section id="pricing">
       <div className="mx-auto max-w-6xl px-4 py-20">
         <Reveal>
-          <h2 className="text-center font-display text-3xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="text-center font-display text-3xl font-medium sm:text-4xl">
             {m.pricing_title({}, { locale })}
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">
@@ -82,20 +82,20 @@ export function PricingSection({ locale }: { locale: Locale }) {
             <div
               className={
                 p.highlighted
-                  ? "relative h-full rounded-xl border-2 border-primary bg-card p-6 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                  : "h-full rounded-xl border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                  ? "relative h-full rounded-[28px] bg-accent p-8 text-accent-foreground transition-shadow duration-300 hover:shadow-lg"
+                  : "h-full rounded-[28px] bg-card p-8 transition-shadow duration-300 hover:shadow-md"
               }
             >
               {p.highlighted && (
-                <span className="absolute -top-3.5 left-6 whitespace-nowrap rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
+                <span className="absolute -top-3.5 left-8 whitespace-nowrap rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground">
                   {m.plan_free_badge({}, { locale })}
                 </span>
               )}
-              <h3 className="font-display text-lg font-semibold">{p.name()}</h3>
+              <h3 className="font-display text-lg font-medium">{p.name()}</h3>
               <div className="mt-4 flex items-baseline gap-1">
-                <span className="font-display text-4xl font-bold tracking-tight">{p.price(locale)}</span>
+                <span className="font-display text-5xl font-medium">{p.price(locale)}</span>
                 {p.key !== "free" && (
-                  <span className="whitespace-nowrap text-sm text-muted-foreground">
+                  <span className={`whitespace-nowrap text-sm ${p.highlighted ? "opacity-70" : "text-muted-foreground"}`}>
                     {m.pricing_per_cam({}, { locale })}
                   </span>
                 )}
@@ -111,8 +111,8 @@ export function PricingSection({ locale }: { locale: Locale }) {
               <Button
                 asChild
                 size="lg"
-                variant={p.highlighted ? "default" : "outline"}
-                className="mt-8 w-full rounded-full"
+                variant={p.highlighted ? "default" : "secondary"}
+                className="mt-8 w-full"
               >
                 {p.key === "free" ? (
                   <Link to="/login">{m.pricing_free_cta({}, { locale })}</Link>

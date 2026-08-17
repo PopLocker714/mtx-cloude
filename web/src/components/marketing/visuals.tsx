@@ -8,7 +8,7 @@ import type { Locale } from "@/lib/i18n";
 /** Стилизованный кадр наблюдения — правая половина hero. */
 export function FeedCard({ locale }: { locale: Locale }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-feed text-feed-foreground shadow-2xl ring-1 ring-black/20 dark:ring-white/15">
+    <div className="relative overflow-hidden rounded-[28px] bg-feed text-feed-foreground shadow-xl">
       {/* Верхняя панель: REC + имя камеры + LIVE */}
       <div className="flex items-center gap-2 border-b border-white/10 px-4 py-2.5 font-ticker text-[11px] tracking-wider">
         <span className="size-2 animate-rec rounded-full bg-signal" aria-hidden />
@@ -71,6 +71,7 @@ export function FeedCard({ locale }: { locale: Locale }) {
 /**
  * Signature-элемент: полоса хранения. Старые сегменты растворяются,
  * семь последних суток держатся — «7 діб завжди безкоштовно» в одной картинке.
+ * Цвета через currentColor: живёт на светлой tonal-панели (bg-accent).
  */
 export function RetentionStrip({ locale }: { locale: Locale }) {
   const ghosts = 3;
@@ -81,25 +82,25 @@ export function RetentionStrip({ locale }: { locale: Locale }) {
         {Array.from({ length: ghosts }, (_, i) => (
           <div
             key={`g${i}`}
-            className="seg h-10 flex-1 rounded-md border border-dashed border-white/15 sm:h-14"
-            style={{ opacity: 0.25 + i * 0.12, transitionDelay: `${i * 70}ms` }}
+            className="seg h-10 flex-1 rounded-xl border border-dashed border-current sm:h-14"
+            style={{ opacity: 0.12 + i * 0.08, transitionDelay: `${i * 70}ms` }}
           />
         ))}
         {Array.from({ length: held }, (_, i) => (
           <div key={`h${i}`} className="flex-1">
             <div
-              className="seg h-14 rounded-md bg-primary/80 ring-1 ring-white/10 sm:h-20"
+              className="seg h-14 rounded-xl bg-primary sm:h-20"
               style={{ transitionDelay: `${(ghosts + i) * 70}ms` }}
             />
-            <div className="mt-2 text-center font-ticker text-[10px] tracking-wider text-feed-faint">
+            <div className="mt-2 text-center font-ticker text-[10px] tracking-wider opacity-60">
               {i === held - 1 ? m.retention_today({}, { locale }) : `−${held - 1 - i}`}
             </div>
           </div>
         ))}
       </div>
-      <div className="mt-3 flex justify-between font-ticker text-[11px] tracking-wider text-feed-faint">
-        <span>{m.retention_deleted({}, { locale })}</span>
-        <span className="text-feed-foreground">{m.retention_held({}, { locale })}</span>
+      <div className="mt-3 flex justify-between font-ticker text-[11px] tracking-wider">
+        <span className="opacity-60">{m.retention_deleted({}, { locale })}</span>
+        <span>{m.retention_held({}, { locale })}</span>
       </div>
     </div>
   );

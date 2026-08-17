@@ -133,17 +133,20 @@ export function MarketingShell({ locale, children }: { locale: Locale; children:
 /** Полоса призыва к действию — повторяется в низу каждой страницы. */
 export function CtaBand({ locale }: { locale: Locale }) {
   return (
-    <section className="border-t bg-muted/40">
-      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <Reveal>
-          <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-            {m.cta_band_title({}, { locale })}
-          </h2>
-          <p className="mt-3 text-muted-foreground">{m.cta_band_body({}, { locale })}</p>
-          <Button asChild size="lg" className="mt-6 rounded-full">
-            <Link to="/login">{m.cta_band_button({}, { locale })}</Link>
-          </Button>
-        </Reveal>
+    <section>
+      <div className="mx-auto max-w-6xl px-4 pb-16 pt-6">
+        {/* Финальный призыв — крупная tonal-панель в духе M3. */}
+        <div className="rounded-[32px] bg-accent px-8 py-16 text-center text-accent-foreground sm:px-12">
+          <Reveal>
+            <h2 className="mx-auto max-w-2xl font-display text-3xl font-medium sm:text-4xl">
+              {m.cta_band_title({}, { locale })}
+            </h2>
+            <p className="mt-4 opacity-80">{m.cta_band_body({}, { locale })}</p>
+            <Button asChild size="lg" className="mt-8">
+              <Link to="/login">{m.cta_band_button({}, { locale })}</Link>
+            </Button>
+          </Reveal>
+        </div>
       </div>
     </section>
   );

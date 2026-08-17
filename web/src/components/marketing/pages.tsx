@@ -16,7 +16,7 @@ function Prose({ children }: { children: React.ReactNode }) {
 }
 
 function PageTitle({ children }: { children: React.ReactNode }) {
-  return <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">{children}</h1>;
+  return <h1 className="font-display text-3xl font-medium sm:text-4xl">{children}</h1>;
 }
 
 // Бренды в hero-стене — текстовые слова, не логотипы: чужие
@@ -41,14 +41,14 @@ export function HomePage({ locale }: { locale: Locale }) {
       <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 sm:py-24 lg:grid-cols-2">
         <div>
           <span
-            className="inline-flex animate-fade-up items-center gap-2 rounded-full bg-accent px-3 py-1 text-sm font-medium text-accent-foreground"
+            className="inline-flex animate-fade-up items-center gap-2 whitespace-nowrap rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-foreground max-sm:text-xs"
             style={{ animationDelay: "0ms" }}
           >
             <span className="size-1.5 rounded-full bg-primary" aria-hidden />
             {m.hero_badge({}, { locale })}
           </span>
           <h1
-            className="mt-5 animate-fade-up text-balance font-display text-4xl font-bold tracking-tight sm:text-5xl"
+            className="mt-5 animate-fade-up text-balance font-display text-4xl font-medium leading-[1.12] sm:text-5xl"
             style={{ animationDelay: "80ms" }}
           >
             {m.hero_title({}, { locale })}
@@ -73,16 +73,16 @@ export function HomePage({ locale }: { locale: Locale }) {
         </div>
       </section>
 
-      {/* Стена совместимости — у категории она заменяет логотипы клиентов. */}
-      <section className="border-t">
-        <div className="mx-auto max-w-6xl px-4 py-10">
+      {/* Стена совместимости: M3 outlined-чипы вместо голого текста. */}
+      <section>
+        <div className="mx-auto max-w-6xl px-4 py-12">
           <Reveal>
             <p className="text-center text-sm text-muted-foreground">{m.brands_label({}, { locale })}</p>
-            <ul className="mt-5 flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
+            <ul className="mt-5 flex flex-wrap items-center justify-center gap-3">
               {CAMERA_BRANDS.map((b) => (
                 <li
                   key={b}
-                  className="font-display text-lg font-semibold tracking-tight text-foreground/60 transition-colors hover:text-foreground"
+                  className="whitespace-nowrap rounded-full border border-border px-4 py-1.5 text-sm font-medium text-foreground/75 transition-colors hover:bg-muted"
                 >
                   {b}
                 </li>
@@ -95,20 +95,22 @@ export function HomePage({ locale }: { locale: Locale }) {
         </div>
       </section>
 
-      <section className="border-t">
+      <section>
         <div className="mx-auto max-w-6xl px-4 py-16">
           <Reveal>
-            <h2 className="text-center font-display text-2xl font-bold tracking-tight sm:text-3xl">
+            <h2 className="text-center font-display text-3xl font-medium sm:text-4xl">
               {m.value_title({}, { locale })}
             </h2>
           </Reveal>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
             {values.map((v, i) => (
               <Reveal key={v.t} delay={i * 90}>
-                <div className="h-full rounded-xl border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                  <v.icon className="size-6 text-primary" />
-                  <h3 className="mt-4 font-display font-semibold">{v.t}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{v.b}</p>
+                <div className="h-full rounded-[28px] bg-card p-8 transition-shadow duration-300 hover:shadow-md">
+                  <div className="flex size-12 items-center justify-center rounded-full bg-accent">
+                    <v.icon className="size-6 text-accent-foreground" />
+                  </div>
+                  <h3 className="mt-5 font-display text-lg font-medium">{v.t}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{v.b}</p>
                 </div>
               </Reveal>
             ))}
@@ -116,15 +118,15 @@ export function HomePage({ locale }: { locale: Locale }) {
         </div>
       </section>
 
-      {/* Signature: полоса хранения на тёмном мониторе. */}
-      <section className="border-y border-transparent bg-feed text-feed-foreground dark:border-white/10">
-        <div className="mx-auto max-w-6xl px-4 py-20">
-          <div className="grid items-center gap-10 lg:grid-cols-[1fr_1.2fr]">
+      {/* Signature: полоса хранения — светлая tonal-панель в духе M3. */}
+      <section>
+        <div className="mx-auto max-w-6xl px-4 py-10">
+          <div className="grid items-center gap-10 rounded-[32px] bg-accent px-8 py-14 text-accent-foreground sm:px-12 lg:grid-cols-[1fr_1.2fr]">
             <Reveal>
-              <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+              <h2 className="font-display text-3xl font-medium sm:text-4xl">
                 {m.retention_title({}, { locale })}
               </h2>
-              <p className="mt-4 text-feed-faint">{m.retention_body({}, { locale })}</p>
+              <p className="mt-4 leading-relaxed opacity-80">{m.retention_body({}, { locale })}</p>
             </Reveal>
             <Reveal delay={150}>
               <RetentionStrip locale={locale} />
@@ -133,25 +135,25 @@ export function HomePage({ locale }: { locale: Locale }) {
         </div>
       </section>
 
-      <section className="border-t bg-muted/30">
+      <section>
         <div className="mx-auto max-w-6xl px-4 py-16">
           <Reveal>
-            <h2 className="text-center font-display text-2xl font-bold tracking-tight sm:text-3xl">
+            <h2 className="text-center font-display text-3xl font-medium sm:text-4xl">
               {m.steps_title({}, { locale })}
             </h2>
           </Reveal>
-          <ol className="mt-10 grid gap-8 md:grid-cols-3">
+          <ol className="mt-12 grid gap-8 md:grid-cols-3">
             {steps.map((s, i) => (
               <li key={s.t}>
                 <Reveal delay={i * 110}>
                   <div className="flex items-center gap-3">
-                    <span className="flex size-8 items-center justify-center rounded-full bg-primary font-ticker text-sm font-medium text-primary-foreground">
+                    <span className="flex size-10 items-center justify-center rounded-full bg-primary font-ticker text-sm font-medium text-primary-foreground">
                       {i + 1}
                     </span>
                     <s.icon className="size-5 text-muted-foreground" />
                   </div>
-                  <h3 className="mt-4 font-display font-semibold">{s.t}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{s.b}</p>
+                  <h3 className="mt-5 font-display text-lg font-medium">{s.t}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.b}</p>
                 </Reveal>
               </li>
             ))}
