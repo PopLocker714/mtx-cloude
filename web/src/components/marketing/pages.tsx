@@ -2,8 +2,9 @@ import { Link } from "@tanstack/react-router";
 import { ShieldCheck, HardDrive, Plug, Download, ScanSearch, MonitorPlay, Mail } from "lucide-react";
 import { m } from "@/paraglide/messages";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { MarketingShell, CtaBand } from "./Shell";
+import { FeedCard, RetentionStrip } from "./visuals";
+import { PricingSection } from "./pricing";
 import { pagePath, type Locale } from "@/lib/i18n";
 
 // Публичные страницы. Каждая принимает локаль сверху и передаёт её в каждый
@@ -14,8 +15,12 @@ function Prose({ children }: { children: React.ReactNode }) {
 }
 
 function PageTitle({ children }: { children: React.ReactNode }) {
-  return <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{children}</h1>;
+  return <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">{children}</h1>;
 }
+
+// Бренды в hero-стене — текстовые слова, не логотипы: чужие
+// картинки-логотипы = чужие торговые марки в нашей вёрстке.
+const CAMERA_BRANDS = ["Hikvision", "Dahua", "Reolink", "Uniview", "TP-Link Tapo", "Imou"];
 
 export function HomePage({ locale }: { locale: Locale }) {
   const values = [
@@ -31,64 +36,114 @@ export function HomePage({ locale }: { locale: Locale }) {
 
   return (
     <MarketingShell locale={locale}>
-      <section className="mx-auto max-w-4xl px-4 py-20 text-center sm:py-28">
-        <h1 className="text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
-          {m.hero_title({}, { locale })}
-        </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground">
-          {m.hero_sub({}, { locale })}
-        </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Button asChild size="lg">
-            <Link to="/login">{m.hero_cta({}, { locale })}</Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link to={pagePath("how-it-works", locale)}>{m.hero_cta_secondary({}, { locale })}</Link>
-          </Button>
+      {/* Hero: слева тезис, справа — кадр наблюдения. */}
+      <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 sm:py-24 lg:grid-cols-2">
+        <div>
+          <span
+            className="inline-flex animate-fade-up items-center gap-2 rounded-full bg-accent px-3 py-1 text-sm font-medium text-accent-foreground"
+            style={{ animationDelay: "0ms" }}
+          >
+            <span className="size-1.5 rounded-full bg-primary" aria-hidden />
+            {m.hero_badge({}, { locale })}
+          </span>
+          <h1
+            className="mt-5 animate-fade-up text-balance font-display text-4xl font-bold tracking-tight sm:text-5xl"
+            style={{ animationDelay: "80ms" }}
+          >
+            {m.hero_title({}, { locale })}
+          </h1>
+          <p
+            className="mt-6 max-w-xl animate-fade-up text-pretty text-lg text-muted-foreground"
+            style={{ animationDelay: "160ms" }}
+          >
+            {m.hero_sub({}, { locale })}
+          </p>
+          <div className="mt-8 flex animate-fade-up flex-wrap gap-3" style={{ animationDelay: "240ms" }}>
+            <Button asChild size="lg">
+              <Link to="/login">{m.hero_cta({}, { locale })}</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link to={pagePath("how-it-works", locale)}>{m.hero_cta_secondary({}, { locale })}</Link>
+            </Button>
+          </div>
         </div>
-        <p className="mt-6 text-sm text-muted-foreground">{m.hero_note({}, { locale })}</p>
+        <div className="animate-fade-up" style={{ animationDelay: "200ms" }}>
+          <FeedCard locale={locale} />
+        </div>
+      </section>
+
+      {/* Стена совместимости — у категории она заменяет логотипы клиентов. */}
+      <section className="border-t">
+        <div className="mx-auto max-w-6xl px-4 py-10">
+          <p className="text-center text-sm text-muted-foreground">{m.brands_label({}, { locale })}</p>
+          <ul className="mt-5 flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
+            {CAMERA_BRANDS.map((b) => (
+              <li key={b} className="font-display text-lg font-semibold tracking-tight text-foreground/60">
+                {b}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-5 text-center font-ticker text-xs tracking-wide text-muted-foreground">
+            {m.brands_any({}, { locale })}
+          </p>
+        </div>
       </section>
 
       <section className="border-t">
         <div className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="text-center text-2xl font-semibold tracking-tight sm:text-3xl">
+          <h2 className="text-center font-display text-2xl font-bold tracking-tight sm:text-3xl">
             {m.value_title({}, { locale })}
           </h2>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {values.map((v) => (
-              <Card key={v.t}>
-                <CardContent className="pt-6">
-                  <v.icon className="size-6 text-muted-foreground" />
-                  <h3 className="mt-4 font-medium">{v.t}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{v.b}</p>
-                </CardContent>
-              </Card>
+              <div key={v.t} className="rounded-xl border bg-card p-6">
+                <v.icon className="size-6 text-primary" />
+                <h3 className="mt-4 font-display font-semibold">{v.t}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{v.b}</p>
+              </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Signature: полоса хранения на тёмном мониторе. */}
+      <section className="bg-feed text-feed-foreground">
+        <div className="mx-auto max-w-6xl px-4 py-20">
+          <div className="grid items-center gap-10 lg:grid-cols-[1fr_1.2fr]">
+            <div>
+              <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+                {m.retention_title({}, { locale })}
+              </h2>
+              <p className="mt-4 text-feed-faint">{m.retention_body({}, { locale })}</p>
+            </div>
+            <RetentionStrip locale={locale} />
           </div>
         </div>
       </section>
 
       <section className="border-t bg-muted/30">
         <div className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="text-center text-2xl font-semibold tracking-tight sm:text-3xl">
+          <h2 className="text-center font-display text-2xl font-bold tracking-tight sm:text-3xl">
             {m.steps_title({}, { locale })}
           </h2>
           <ol className="mt-10 grid gap-8 md:grid-cols-3">
             {steps.map((s, i) => (
               <li key={s.t}>
                 <div className="flex items-center gap-3">
-                  <span className="flex size-8 items-center justify-center rounded-full bg-foreground text-sm font-medium text-background">
+                  <span className="flex size-8 items-center justify-center rounded-full bg-primary font-ticker text-sm font-medium text-primary-foreground">
                     {i + 1}
                   </span>
                   <s.icon className="size-5 text-muted-foreground" />
                 </div>
-                <h3 className="mt-4 font-medium">{s.t}</h3>
+                <h3 className="mt-4 font-display font-semibold">{s.t}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{s.b}</p>
               </li>
             ))}
           </ol>
         </div>
       </section>
+
+      <PricingSection locale={locale} />
 
       <CtaBand locale={locale} />
     </MarketingShell>

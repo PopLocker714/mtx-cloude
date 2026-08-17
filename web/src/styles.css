@@ -112,6 +112,104 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* ——— Маркетинговые страницы ———
+ *
+ * Всё, что ниже, живёт только под .marketing (вешается в MarketingShell):
+ * ЛК и админка остаются на нейтральных shadcn-токенах выше и не меняются.
+ *
+ * Направление: «монітор охорони при денному світлі» — светлая инженерная
+ * страница, внутри которой тёмные feed-компоненты из мира видеонаблюдения.
+ * Зелёный primary — цвет «під охороною» с охранных панелей; красный —
+ * только сигнальные микро-акценты (REC, live), никогда не CTA.
+ */
+
+@font-face {
+  font-family: "Fixel Display";
+  src: url("/fonts/FixelDisplay-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fixel Display";
+  src: url("/fonts/FixelDisplay-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fixel Text";
+  src: url("/fonts/FixelText-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fixel Text";
+  src: url("/fonts/FixelText-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+
+.marketing {
+  --background: oklch(0.985 0.002 240);
+  --foreground: oklch(0.22 0.02 255);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.02 255);
+  --primary: oklch(0.46 0.1 155);
+  --primary-foreground: oklch(0.985 0.002 240);
+  --secondary: oklch(0.955 0.004 240);
+  --secondary-foreground: oklch(0.22 0.02 255);
+  --muted: oklch(0.955 0.004 240);
+  --muted-foreground: oklch(0.5 0.015 250);
+  --accent: oklch(0.94 0.02 155);
+  --accent-foreground: oklch(0.32 0.06 155);
+  --border: oklch(0.9 0.006 240);
+  --input: oklch(0.9 0.006 240);
+  --ring: oklch(0.46 0.1 155);
+
+  /* Мир камер: тёмный монитор и сигнальный красный. */
+  --feed: oklch(0.18 0.015 255);
+  --feed-muted: oklch(0.28 0.015 255);
+  --feed-foreground: oklch(0.93 0.005 250);
+  --feed-faint: oklch(0.62 0.01 250);
+  --signal: oklch(0.6 0.21 25);
+
+  font-family: "Fixel Text", system-ui, -apple-system, sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+@theme inline {
+  --color-feed: var(--feed);
+  --color-feed-muted: var(--feed-muted);
+  --color-feed-foreground: var(--feed-foreground);
+  --color-feed-faint: var(--feed-faint);
+  --color-signal: var(--signal);
+
+  --font-display: "Fixel Display", system-ui, sans-serif;
+  --font-ticker: "IBM Plex Mono", ui-monospace, monospace;
+
+  --animate-rec: rec 1.6s ease-in-out infinite;
+  --animate-fade-up: fade-up 0.7s ease-out both;
+
+  @keyframes rec {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+  }
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing *,
+  .marketing *::before,
+  .marketing *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
