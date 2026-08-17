@@ -65,8 +65,9 @@ function AppLayout() {
   return (
     <AppThemeScope>
     <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
+      {/* M3 drawer: без бордера (разница поверхностей вместо линии). */}
+      <Sidebar className="border-none">
+        <SidebarHeader className="px-4 pt-4">
           {/* Бренд как на лендинге: анимированный глаз-облако + wordmark. */}
           <div className="flex items-center gap-1.5 px-2 py-1">
             <Logo className="h-6" />
@@ -74,8 +75,8 @@ function AppLayout() {
             <span className="ml-1 text-xs text-muted-foreground">cloud</span>
           </div>
         </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
+        <SidebarContent className="px-3">
+          <SidebarMenu className="gap-1.5">
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={pathname.startsWith("/cameras") || pathname.startsWith("/camera/")}>
                 <Link to="/cameras">

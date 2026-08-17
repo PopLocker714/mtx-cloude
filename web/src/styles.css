@@ -225,6 +225,17 @@
   box-sizing: border-box;
 }
 
+/* Tailwind v4 по умолчанию красит border в currentColor (почти чёрный текст).
+ * Базовый слой возвращает токен темы — иначе каждая голая `border-b`
+ * рисует жирную тёмную линию (родом из shadcn-пресета, тут его не было). */
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+  }
+}
+
 html {
   /* Плавный скролл к якорям (Тарифи → #pricing); отступ под sticky-шапку. */
   scroll-behavior: smooth;
