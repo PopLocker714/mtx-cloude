@@ -1,0 +1,62 @@
+/* АВТОГЕНЕРАЦИЯ — не редактировать руками. Источник: scripts/gen-m3-css.ts
+ * (Material Design 3, seed #1e7a4f, маппинг в src/lib/m3-theme.ts). */
+
+:root {
+  --background: #f6fbf4;
+  --foreground: #171d19;
+  --card: #ffffff;
+  --card-foreground: #171d19;
+  --popover: #f0f5ee;
+  --popover-foreground: #171d19;
+  --primary: #286a48;
+  --primary-foreground: #ffffff;
+  --secondary: #d1e8d6;
+  --secondary-foreground: #374b3e;
+  --muted: #e4eae3;
+  --muted-foreground: #404942;
+  --accent: #adf2c6;
+  --accent-foreground: #075232;
+  --destructive: #ba1a1a;
+  --destructive-foreground: #ffffff;
+  --border: #c0c9c0;
+  --input: #c0c9c0;
+  --ring: #286a48;
+  --sidebar: #eaefe8;
+  --sidebar-foreground: #171d19;
+  --sidebar-primary: #286a48;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #d1e8d6;
+  --sidebar-accent-foreground: #374b3e;
+  --sidebar-border: #c0c9c0;
+  --sidebar-ring: #286a48;
+}
+
+.dark {
+  --background: #0f1511;
+  --foreground: #dfe4dd;
+  --card: #171d19;
+  --card-foreground: #dfe4dd;
+  --popover: #171d19;
+  --popover-foreground: #dfe4dd;
+  --primary: #92d5ab;
+  --primary-foreground: #003920;
+  --secondary: #374b3e;
+  --secondary-foreground: #d1e8d6;
+  --muted: #262b27;
+  --muted-foreground: #c0c9c0;
+  --accent: #075232;
+  --accent-foreground: #adf2c6;
+  --destructive: #ffb4ab;
+  --destructive-foreground: #690005;
+  --border: #404942;
+  --input: #404942;
+  --ring: #92d5ab;
+  --sidebar: #1b211d;
+  --sidebar-foreground: #dfe4dd;
+  --sidebar-primary: #92d5ab;
+  --sidebar-primary-foreground: #003920;
+  --sidebar-accent: #374b3e;
+  --sidebar-accent-foreground: #d1e8d6;
+  --sidebar-border: #404942;
+  --sidebar-ring: #92d5ab;
+}

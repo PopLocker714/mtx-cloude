@@ -1,4 +1,5 @@
 import { HeadContent, Scripts, createRootRoute, useRouterState } from '@tanstack/react-router'
+import { ThemeProvider } from 'next-themes'
 import { localeFromPath } from '@/lib/i18n'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
@@ -35,12 +36,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   // из них чужое значение. Роутер даёт путь на каждый запрос отдельно.
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   return (
-    <html lang={localeFromPath(pathname)}>
+    // suppressHydrationWarning: next-themes дописывает класс темы на <html>
+    // до гидрации (инлайн-скрипт), React не должен на это ругаться.
+    <html lang={localeFromPath(pathname)} suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {children}
+        </ThemeProvider>
         <TanStackDevtools
           config={{
             position: 'bottom-right',

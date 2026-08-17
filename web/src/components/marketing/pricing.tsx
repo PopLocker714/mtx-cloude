@@ -112,7 +112,7 @@ export function PricingSection({ locale }: { locale: Locale }) {
                 asChild
                 size="lg"
                 variant={p.highlighted ? "default" : "outline"}
-                className="mt-8 w-full"
+                className="mt-8 w-full rounded-full"
               >
                 {p.key === "free" ? (
                   <Link to="/login">{m.pricing_free_cta({}, { locale })}</Link>

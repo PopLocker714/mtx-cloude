@@ -1,5 +1,6 @@
 
 @import "tailwindcss";
+@import "./m3-tokens.css";
 
 /* Токены темы для shadcn/ui.
  *
@@ -10,43 +11,15 @@
  * Значения ниже — нейтральная палитра shadcn в oklch, светлая и тёмная.
  */
 
-/* Бренд-палитра живёт в :root и красит ВСЁ — маркетинг, ЛК и админку.
- * Направление то же, что у лендинга: светлая инженерная поверхность,
- * зелёный «під охороною» как primary, сигнальный красный для REC/live. */
+/* Цветовая схема — Material Design 3 из бренд-seed, запечена в
+ * src/m3-tokens.css (:root светлая, .dark тёмная; генерация —
+ * bun run gen:theme). Здесь только вне-схемные константы. */
 :root {
-  --radius: 0.625rem;
+  /* M3 shape: скруглее, кнопки-CTA — полные пилюли (классом). */
+  --radius: 0.75rem;
 
-  --background: oklch(0.985 0.002 240);
-  --foreground: oklch(0.22 0.02 255);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 255);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 255);
-  --primary: oklch(0.46 0.1 155);
-  --primary-foreground: oklch(0.985 0.002 240);
-  --secondary: oklch(0.955 0.004 240);
-  --secondary-foreground: oklch(0.22 0.02 255);
-  --muted: oklch(0.955 0.004 240);
-  --muted-foreground: oklch(0.5 0.015 250);
-  --accent: oklch(0.94 0.02 155);
-  --accent-foreground: oklch(0.32 0.06 155);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.9 0.006 240);
-  --input: oklch(0.9 0.006 240);
-  --ring: oklch(0.46 0.1 155);
-
-  --sidebar: oklch(0.97 0.004 240);
-  --sidebar-foreground: oklch(0.22 0.02 255);
-  --sidebar-primary: oklch(0.46 0.1 155);
-  --sidebar-primary-foreground: oklch(0.985 0.002 240);
-  --sidebar-accent: oklch(0.94 0.02 155);
-  --sidebar-accent-foreground: oklch(0.32 0.06 155);
-  --sidebar-border: oklch(0.9 0.006 240);
-  --sidebar-ring: oklch(0.46 0.1 155);
-
-  /* Мир камер: тёмный монитор и сигнальный красный. Глобально, чтобы
-   * wordmark с REC-точкой работал и в ЛК. */
+  /* Мир камер: тёмный монитор и сигнальный красный. Глобально и вне
+   * динамической схемы — REC-точка и feed-секции не перекрашиваются. */
   --feed: oklch(0.18 0.015 255);
   --feed-muted: oklch(0.28 0.015 255);
   --feed-foreground: oklch(0.93 0.005 250);
@@ -54,36 +27,7 @@
   --signal: oklch(0.6 0.21 25);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
+/* .dark задаётся в m3-tokens.css (сгенерированная тёмная M3-схема). */
 
 /* Tailwind v4 узнаёт о переменных только через @theme: без этого блока
  * классов bg-primary/text-muted-foreground просто не существует. */
@@ -229,6 +173,35 @@
     translate: 0 0;
     transform: none;
     transition: none;
+  }
+}
+
+/* Логотип «глаз-облако»: моргает (веко = сплющивание глаза) и
+ * осматривается, как поворотная камера. Глобально — живёт и в ЛК. */
+.logo-eye {
+  animation: logo-blink 7s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.logo-iris {
+  animation: logo-look 11s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes logo-blink {
+  0%, 91%, 100% { transform: scaleY(1); }
+  94%, 96% { transform: scaleY(0.08); }
+}
+@keyframes logo-look {
+  0%, 18% { transform: translateX(0); }
+  30%, 44% { transform: translateX(2.6px); }
+  58%, 74% { transform: translateX(-2.4px); }
+  86%, 100% { transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo-eye,
+  .logo-iris {
+    animation: none;
   }
 }
 

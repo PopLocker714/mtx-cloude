@@ -8,7 +8,7 @@ import type { Locale } from "@/lib/i18n";
 /** Стилизованный кадр наблюдения — правая половина hero. */
 export function FeedCard({ locale }: { locale: Locale }) {
   return (
-    <div className="relative overflow-hidden rounded-xl bg-feed text-feed-foreground shadow-2xl ring-1 ring-black/20">
+    <div className="relative overflow-hidden rounded-2xl bg-feed text-feed-foreground shadow-2xl ring-1 ring-black/20 dark:ring-white/15">
       {/* Верхняя панель: REC + имя камеры + LIVE */}
       <div className="flex items-center gap-2 border-b border-white/10 px-4 py-2.5 font-ticker text-[11px] tracking-wider">
         <span className="size-2 animate-rec rounded-full bg-signal" aria-hidden />

@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { KeyRound, Send, Check } from "lucide-react";
+import { useTheme } from "next-themes";
+import { KeyRound, Send, Check, Palette, Monitor, Moon, Sun } from "lucide-react";
+import { DEFAULT_SEED, SEED_PRESETS, loadSeed, saveSeed } from "@/lib/m3-theme";
 import { authClient, useSession } from "@/lib/auth-client";
 import { getTelegramLink, unlinkTelegram, type TelegramStatus } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -65,6 +67,95 @@ function TelegramCard() {
   );
 }
 
+// Оформление: тема (светлая/тёмная/системная) и динамический цвет M3 —
+// seed-цвет пересчитывается в полную схему на лету (см. lib/m3-theme.ts).
+function AppearanceCard() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const [seed, setSeed] = useState<string | null>(null);
+  useEffect(() => {
+    setMounted(true);
+    setSeed(loadSeed());
+  }, []);
+
+  const pick = (hex: string | null) => {
+    saveSeed(hex);
+    setSeed(hex);
+  };
+
+  const modes = [
+    { key: "light", label: "Светлая", icon: Sun },
+    { key: "dark", label: "Тёмная", icon: Moon },
+    { key: "system", label: "Системная", icon: Monitor },
+  ] as const;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Palette className="size-4" /> Оформление
+        </CardTitle>
+        <CardDescription>Тема и цвет кабинета. Цвет пересчитывается по Material Design 3.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label>Тема</Label>
+          <div className="flex gap-2">
+            {modes.map((mo) => (
+              <Button
+                key={mo.key}
+                type="button"
+                size="sm"
+                variant={mounted && theme === mo.key ? "default" : "outline"}
+                className="rounded-full"
+                onClick={() => setTheme(mo.key)}
+              >
+                <mo.icon className="size-4" /> {mo.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Цвет</Label>
+          <div className="flex flex-wrap items-center gap-2">
+            {SEED_PRESETS.map((p) => {
+              const active = (seed ?? DEFAULT_SEED) === p.hex;
+              return (
+                <button
+                  key={p.hex}
+                  type="button"
+                  title={p.name}
+                  aria-label={p.name}
+                  onClick={() => pick(p.hex === DEFAULT_SEED ? null : p.hex)}
+                  className={`size-8 rounded-full ring-offset-2 ring-offset-background transition-shadow ${active ? "ring-2 ring-ring" : "hover:ring-2 hover:ring-border"}`}
+                  style={{ backgroundColor: p.hex }}
+                />
+              );
+            })}
+            <label
+              className="relative flex size-8 cursor-pointer items-center justify-center overflow-hidden rounded-full border text-muted-foreground"
+              title="Свой цвет"
+            >
+              <input
+                type="color"
+                className="absolute size-0 opacity-0"
+                value={seed ?? DEFAULT_SEED}
+                onChange={(e) => pick(e.target.value)}
+              />
+              +
+            </label>
+            {seed && (
+              <Button type="button" variant="ghost" size="sm" onClick={() => pick(null)}>
+                Сбросить
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function ProfilePage() {
   const { data: session } = useSession();
   const [current, setCurrent] = useState("");
@@ -107,6 +198,8 @@ function ProfilePage() {
           <div><span className="text-muted-foreground">Имя:</span> {session?.user?.name || "—"}</div>
         </CardContent>
       </Card>
+
+      <AppearanceCard />
 
       <TelegramCard />
 

@@ -60,10 +60,10 @@ export function HomePage({ locale }: { locale: Locale }) {
             {m.hero_sub({}, { locale })}
           </p>
           <div className="mt-8 flex animate-fade-up flex-wrap gap-3" style={{ animationDelay: "240ms" }}>
-            <Button asChild size="lg">
+            <Button asChild size="lg" className="rounded-full">
               <Link to="/login">{m.hero_cta({}, { locale })}</Link>
             </Button>
-            <Button asChild size="lg" variant="outline">
+            <Button asChild size="lg" variant="outline" className="rounded-full">
               <Link to={pagePath("how-it-works", locale)}>{m.hero_cta_secondary({}, { locale })}</Link>
             </Button>
           </div>
@@ -117,7 +117,7 @@ export function HomePage({ locale }: { locale: Locale }) {
       </section>
 
       {/* Signature: полоса хранения на тёмном мониторе. */}
-      <section className="bg-feed text-feed-foreground">
+      <section className="border-y border-transparent bg-feed text-feed-foreground dark:border-white/10">
         <div className="mx-auto max-w-6xl px-4 py-20">
           <div className="grid items-center gap-10 lg:grid-cols-[1fr_1.2fr]">
             <Reveal>

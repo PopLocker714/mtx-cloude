@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "generate-routes": "tsr generate",
+    "gen:theme": "bun scripts/gen-m3-css.ts",
     "build": "bun scripts/gen-sitemap.ts && vite build",
     "preview": "vite preview",
     "test": "vitest run",
@@ -19,6 +20,7 @@
     "@fontsource-variable/geist": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
     "@inlang/paraglide-js": "^2.23.1",
+    "@material/material-color-utilities": "^0.4.0",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",
     "@tanstack/react-query": "^5.101.3",

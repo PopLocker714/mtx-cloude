@@ -5,6 +5,8 @@ import { m } from "@/paraglide/messages";
 import { Button } from "@/components/ui/button";
 import { pagePath, switchLocalePath, type Locale } from "@/lib/i18n";
 import { Reveal } from "./reveal";
+import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import "@fontsource/ibm-plex-mono/400.css";
 
 // Каркас публичных страниц: шапка, подвал, переключатель языка.
@@ -12,12 +14,12 @@ import "@fontsource/ibm-plex-mono/400.css";
 // Класс .marketing на корне включает маркетинговую палитру и шрифты
 // (styles.css) и не трогает ЛК/админку.
 
-/** Wordmark: «oko» с красной REC-точкой — весь бренд в одном глифе. */
+/** Бренд: анимированный глаз-облако + wordmark. */
 function Brand({ locale }: { locale: Locale }) {
   return (
-    <span className="flex items-baseline gap-0.5 font-display text-xl font-bold tracking-tight">
-      {m.brand_name({}, { locale })}
-      <span className="size-1.5 translate-y-[-1px] rounded-full bg-signal" aria-hidden />
+    <span className="flex items-center gap-1.5">
+      <Logo className="h-6" />
+      <span className="font-display text-xl font-bold tracking-tight">{m.brand_name({}, { locale })}</span>
     </span>
   );
 }
@@ -80,7 +82,8 @@ export function MarketingShell({ locale, children }: { locale: Locale; children:
             >
               {m.nav_lang({}, { locale })}
             </Link>
-            <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
+            <ThemeToggle />
+            <Button asChild size="sm" variant="outline" className="hidden rounded-full sm:inline-flex">
               <Link to="/login">{m.nav_signin({}, { locale })}</Link>
             </Button>
             <button
@@ -137,7 +140,7 @@ export function CtaBand({ locale }: { locale: Locale }) {
             {m.cta_band_title({}, { locale })}
           </h2>
           <p className="mt-3 text-muted-foreground">{m.cta_band_body({}, { locale })}</p>
-          <Button asChild size="lg" className="mt-6">
+          <Button asChild size="lg" className="mt-6 rounded-full">
             <Link to="/login">{m.cta_band_button({}, { locale })}</Link>
           </Button>
         </Reveal>
