@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { m } from "@/paraglide/messages";
+import { useAppLocale } from "@/lib/app-locale";
 import { stubSendCode, stubVerifyEmail } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,6 +13,7 @@ export const Route = createFileRoute("/verify-email")({
 });
 
 function VerifyEmail() {
+  const [locale] = useAppLocale();
   const { email } = Route.useSearch();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +31,7 @@ function VerifyEmail() {
     setLoading(true);
     try {
       await stubVerifyEmail(email, code); // любой код принимается (стаб)
-      window.location.href = "/cameras";
+      window.location.href = "/home";
     } catch (err) {
       setError((err as Error).message);
       setLoading(false);
@@ -39,9 +42,9 @@ function VerifyEmail() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Подтверждение почты</CardTitle>
+          <CardTitle>{m.ve_title({}, { locale })}</CardTitle>
           <CardDescription>
-            {email ? <>Код отправлен на <b>{email}</b>. Введите его ниже.</> : "Введите код из письма."}
+            {email ? m.ve_desc_sent({ email }, { locale }) : m.ve_desc({}, { locale })}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -53,14 +56,12 @@ function VerifyEmail() {
             </InputOTP>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading || code.length < 6}>
-              {loading ? "…" : "Подтвердить"}
+              {loading ? "…" : m.ve_submit({}, { locale })}
             </Button>
           </form>
-          <p className="mt-4 text-xs text-muted-foreground text-center">
-            Заготовка: письма пока не отправляются (подключим Unisender Go). Подойдёт любой код.
-          </p>
+          <p className="mt-4 text-xs text-muted-foreground text-center">{m.fp_stub({}, { locale })}</p>
           <p className="mt-2 text-sm text-center">
-            <Link to="/login" className="underline">← Ко входу</Link>
+            <Link to="/login" className="underline">{m.fp_back({}, { locale })}</Link>
           </p>
         </CardContent>
       </Card>

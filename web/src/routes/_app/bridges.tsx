@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Server, Plus, Copy, Circle, Trash2, Ban, Download } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { m } from "@/paraglide/messages";
+import { useAppLocale } from "@/lib/app-locale";
 import { listBridges, createBridge, claimBridge, revokeBridge, deleteBridge, type Bridge } from "@/lib/api";
 import { API_BASE } from "@/lib/api-base";
 import { Button } from "@/components/ui/button";
@@ -21,6 +23,7 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/_app/bridges")({ component: BridgesPage });
 
 function BridgesPage() {
+  const [locale] = useAppLocale();
   const [bridges, setBridges] = useState<Bridge[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<{ code: string } | null>(null);
@@ -88,27 +91,24 @@ function BridgesPage() {
         </h1>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setClaimOpen(true)}>
-            <Download className="size-4" /> Забрать устройство
+            <Download className="size-4" /> {m.br_claim({}, { locale })}
           </Button>
           <Button onClick={add} disabled={creating}>
-            <Plus className="size-4" /> Добавить bridge
+            <Plus className="size-4" /> {m.br_add({}, { locale })}
           </Button>
         </div>
       </div>
-      <p className="text-sm text-muted-foreground">
-        Bridge — маленькая программа на устройстве в сети ваших камер (мини-ПК, Raspberry Pi). Она забирает поток камер
-        по RTSP и отправляет в облако — без проброса портов. Одного bridge хватает на все камеры в этой сети.
-      </p>
+      <p className="text-sm text-muted-foreground">{m.br_intro({}, { locale })}</p>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {bridges === null ? (
-        <p className="text-muted-foreground">Загрузка…</p>
+        <p className="text-muted-foreground">{m.app_loading({}, { locale })}</p>
       ) : bridges.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
             <Server className="size-8 mx-auto mb-2 opacity-50" />
-            Нет bridge. Нажмите «Добавить bridge», чтобы получить код привязки.
+            {m.br_empty({}, { locale })}
           </CardContent>
         </Card>
       ) : (
@@ -117,11 +117,11 @@ function BridgesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Название</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead>Версия</TableHead>
-                  <TableHead>Токен</TableHead>
-                  <TableHead className="text-right">Действия</TableHead>
+                  <TableHead>{m.br_col_name({}, { locale })}</TableHead>
+                  <TableHead>{m.br_col_status({}, { locale })}</TableHead>
+                  <TableHead>{m.br_col_version({}, { locale })}</TableHead>
+                  <TableHead>{m.br_col_token({}, { locale })}</TableHead>
+                  <TableHead className="text-right">{m.br_col_actions({}, { locale })}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -130,14 +130,14 @@ function BridgesPage() {
                     <TableCell className="font-medium">{b.name}</TableCell>
                     <TableCell>
                       {!b.paired ? (
-                        <Badge variant="outline">код: {b.pairingCode}</Badge>
+                        <Badge variant="outline">{m.br_code({ code: b.pairingCode ?? "" }, { locale })}</Badge>
                       ) : b.online ? (
-                        <span className="flex items-center gap-1.5 text-sm text-green-600">
-                          <Circle className="size-2 fill-green-600" /> онлайн
+                        <span className="flex items-center gap-1.5 text-sm text-primary">
+                          <Circle className="size-2 fill-primary" /> {m.home_online({}, { locale })}
                         </span>
                       ) : (
                         <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                          <Circle className="size-2 fill-muted-foreground" /> офлайн
+                          <Circle className="size-2 fill-muted-foreground" /> {m.home_offline({}, { locale })}
                         </span>
                       )}
                     </TableCell>
@@ -145,11 +145,21 @@ function BridgesPage() {
                     <TableCell className="font-mono text-xs">{b.tokenPrefix ? b.tokenPrefix + "…" : "—"}</TableCell>
                     <TableCell className="text-right space-x-2">
                       {b.paired && (
-                        <Button variant="ghost" size="sm" onClick={() => revokeBridge(b.id).then(refresh)} title="Отозвать токен">
-                          <Ban className="size-4" /> Отозвать
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => revokeBridge(b.id).then(refresh)}
+                          title={m.br_revoke_title({}, { locale })}
+                        >
+                          <Ban className="size-4" /> {m.br_revoke({}, { locale })}
                         </Button>
                       )}
-                      <Button variant="ghost" size="sm" onClick={() => deleteBridge(b.id).then(refresh)} title="Удалить">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteBridge(b.id).then(refresh)}
+                        title={m.br_delete({}, { locale })}
+                      >
                         <Trash2 className="size-4" />
                       </Button>
                     </TableCell>
@@ -165,52 +175,42 @@ function BridgesPage() {
       <Dialog open={created !== null} onOpenChange={(v) => !v && setCreated(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Bridge создан</DialogTitle>
-            <DialogDescription>
-              Запустите bridge на устройстве в сети камер. Код действует 15 минут и одноразовый.
-            </DialogDescription>
+            <DialogTitle>{m.br_created_title({}, { locale })}</DialogTitle>
+            <DialogDescription>{m.br_created_desc({}, { locale })}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            {/* QR — быстрая привязка сканером; код и docker-команда ниже как альтернатива */}
+            {/* QR — быстрая привязка сканером; код и команды ниже как альтернатива */}
             <div className="flex flex-col items-center gap-2">
               <div className="rounded-lg bg-white p-3">
                 <QRCodeSVG value={qrPayload} size={168} level="M" />
               </div>
-              <p className="text-xs text-muted-foreground text-center">
-                Отсканируйте в приложении oko-bridge, либо используйте код и команду ниже.
-              </p>
+              <p className="text-xs text-muted-foreground text-center">{m.br_qr_hint({}, { locale })}</p>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Код привязки</Label>
+              <Label className="text-xs text-muted-foreground">{m.br_code_label({}, { locale })}</Label>
               <div className="text-2xl font-mono font-semibold tracking-widest text-center py-2 bg-muted rounded-md">
                 {created?.code}
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Установка одной командой (Linux — мини-ПК / Raspberry Pi)</Label>
+              <Label className="text-xs text-muted-foreground">{m.br_install_label({}, { locale })}</Label>
               <pre className="rounded-md bg-muted p-3 text-xs font-mono whitespace-pre-wrap break-all">{installCmd}</pre>
               <Button type="button" variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(installCmd)}>
-                <Copy className="size-4" /> Копировать команду
+                <Copy className="size-4" /> {m.ccd_copy_cmd({}, { locale })}
               </Button>
-              <p className="text-xs text-muted-foreground">
-                Скрипт скачает нативный агент под вашу систему, поставит ffmpeg, поднимет сервис с автозапуском
-                (systemd) и привяжет bridge к аккаунту. Docker не нужен. Дальше камеры найдутся автоматически.
-              </p>
+              <p className="text-xs text-muted-foreground">{m.br_install_hint({}, { locale })}</p>
             </div>
             <details className="text-xs text-muted-foreground">
-              <summary className="cursor-pointer">…или запустить вручную через Docker</summary>
+              <summary className="cursor-pointer">{m.br_docker_alt({}, { locale })}</summary>
               <pre className="rounded-md bg-muted p-3 mt-2 font-mono whitespace-pre-wrap break-all">{dockerCmd}</pre>
               <Button type="button" variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(dockerCmd)}>
-                <Copy className="size-4" /> Копировать
+                <Copy className="size-4" /> {m.ccd_copy({}, { locale })}
               </Button>
             </details>
-            <p className="text-xs text-muted-foreground">
-              После привязки токен сохранится на устройстве — код больше не нужен. Дальше добавляйте камеры в кабинете
-              с их RTSP-ссылкой, выбирая этот bridge.
-            </p>
+            <p className="text-xs text-muted-foreground">{m.br_after_pair({}, { locale })}</p>
           </div>
           <DialogFooter>
-            <Button onClick={() => setCreated(null)}>Готово</Button>
+            <Button onClick={() => setCreated(null)}>{m.ccd_done({}, { locale })}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -219,14 +219,11 @@ function BridgesPage() {
       <Dialog open={claimOpen} onOpenChange={(v) => { setClaimOpen(v); if (!v) setClaimError(null); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Забрать устройство</DialogTitle>
-            <DialogDescription>
-              Если bridge уже установлен, он показал код устройства на экране или в логе
-              (<span className="font-mono">journalctl -u oko-bridge</span>). Введите его — устройство привяжется к вашему аккаунту.
-            </DialogDescription>
+            <DialogTitle>{m.br_claim_title({}, { locale })}</DialogTitle>
+            <DialogDescription>{m.br_claim_desc({}, { locale })}</DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Label htmlFor="device-code" className="text-xs text-muted-foreground">Код устройства</Label>
+            <Label htmlFor="device-code" className="text-xs text-muted-foreground">{m.br_claim_code({}, { locale })}</Label>
             <input
               id="device-code"
               value={claimCode}
@@ -238,9 +235,9 @@ function BridgesPage() {
             {claimError && <p className="text-sm text-destructive">{claimError}</p>}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setClaimOpen(false)}>Отмена</Button>
+            <Button variant="outline" onClick={() => setClaimOpen(false)}>{m.br_claim_cancel({}, { locale })}</Button>
             <Button onClick={claim} disabled={claiming || claimCode.replace(/-/g, "").length !== 8}>
-              {claiming ? "Забираем…" : "Забрать"}
+              {claiming ? m.br_claiming({}, { locale }) : m.br_claim_go({}, { locale })}
             </Button>
           </DialogFooter>
         </DialogContent>

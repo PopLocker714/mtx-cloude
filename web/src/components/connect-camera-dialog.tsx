@@ -117,11 +117,11 @@ export function ConnectCameraDialog({ open, onOpenChange, existingId, onCreated 
     try {
       if (mode === "bridge") {
         const url = useRawUrl ? sourceUrl : buildRtspUrl({ host, port, user, pass, path });
-        await createCamera({ name: name || "Camera", bridgeId, sourceUrl: url });
+        await createCamera({ name: name || m.cam_default_name({}, { locale }), bridgeId, sourceUrl: url });
         setAddedViaBridge(true);
         onCreated?.();
       } else {
-        const c = await createCamera({ name: name || "Camera" });
+        const c = await createCamera({ name: name || m.cam_default_name({}, { locale }) });
         setConn(c);
         onCreated?.();
       }

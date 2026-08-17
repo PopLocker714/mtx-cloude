@@ -1,5 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { m } from "@/paraglide/messages";
+import { useAppLocale } from "@/lib/app-locale";
 import { stubResetPassword } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +15,7 @@ export const Route = createFileRoute("/reset-password")({
 });
 
 function ResetPassword() {
+  const [locale] = useAppLocale();
   const { email } = Route.useSearch();
   const navigate = useNavigate();
   const [code, setCode] = useState("");
@@ -40,14 +43,14 @@ function ResetPassword() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Новый пароль</CardTitle>
+          <CardTitle>{m.rp_title({}, { locale })}</CardTitle>
           <CardDescription>
-            {email ? <>Введите код из письма для <b>{email}</b> и новый пароль.</> : "Введите код и новый пароль."}
+            {email ? m.rp_desc_email({ email }, { locale }) : m.rp_desc({}, { locale })}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {done ? (
-            <p className="text-sm text-center py-4">Пароль изменён. Перенаправляем ко входу…</p>
+            <p className="text-sm text-center py-4">{m.rp_done({}, { locale })}</p>
           ) : (
             <form onSubmit={submit} className="space-y-4">
               <div className="flex justify-center">
@@ -58,20 +61,18 @@ function ResetPassword() {
                 </InputOTP>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="pw">Новый пароль</Label>
+                <Label htmlFor="pw">{m.rp_new({}, { locale })}</Label>
                 <Input id="pw" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full" disabled={loading || code.length < 6}>
-                {loading ? "…" : "Сменить пароль"}
+                {loading ? "…" : m.rp_submit({}, { locale })}
               </Button>
             </form>
           )}
-          <p className="mt-4 text-xs text-muted-foreground text-center">
-            Заготовка: реальный сброс подключим через Unisender Go. Сейчас подходит любой код.
-          </p>
+          <p className="mt-4 text-xs text-muted-foreground text-center">{m.fp_stub({}, { locale })}</p>
           <p className="mt-2 text-sm text-center">
-            <Link to="/login" className="underline">← Ко входу</Link>
+            <Link to="/login" className="underline">{m.fp_back({}, { locale })}</Link>
           </p>
         </CardContent>
       </Card>

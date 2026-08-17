@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, RefreshCw, Radio, Film, Loader2, WifiOff, Zap } from "lucide-react";
+import { m } from "@/paraglide/messages";
+import { useAppLocale } from "@/lib/app-locale";
 import {
   getConnection,
   createViewToken,
@@ -53,6 +55,7 @@ function fmt(d: Date) {
 }
 
 export function CameraView({ cameraId }: { cameraId: string }) {
+  const [locale] = useAppLocale();
   const [path, setPath] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [token, setToken] = useState<string | null>(null);
@@ -79,7 +82,7 @@ export function CameraView({ cameraId }: { cameraId: string }) {
   }, [cameraId]);
 
   if (error) return <p className="text-sm text-destructive">{error}</p>;
-  if (!path || !token) return <p className="text-muted-foreground">Загрузка…</p>;
+  if (!path || !token) return <p className="text-muted-foreground">{m.app_loading({}, { locale })}</p>;
 
   return (
     <div className="space-y-6">
@@ -93,6 +96,7 @@ export function CameraView({ cameraId }: { cameraId: string }) {
 }
 
 function LiveCard({ path, token }: { path: string; token: string }) {
+  const [locale] = useAppLocale();
   const videoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const [state, setState] = useState<"idle" | "connecting" | "live" | "error">("idle");
@@ -118,8 +122,8 @@ function LiveCard({ path, token }: { path: string; token: string }) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <Radio className="size-4" /> Прямой эфир
-          {state === "live" && <span className="text-xs text-red-600 font-medium">● В ЭФИРЕ</span>}
+          <Radio className="size-4" /> {m.cv_live({}, { locale })}
+          {state === "live" && <span className="text-xs text-signal font-medium">{m.cv_on_air({}, { locale })}</span>}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -142,20 +146,20 @@ function LiveCard({ path, token }: { path: string; token: string }) {
               {state === "connecting" ? (
                 <>
                   <Loader2 className="size-9 animate-spin" />
-                  <span className="text-sm">Подключение…</span>
+                  <span className="text-sm">{m.cv_connecting({}, { locale })}</span>
                 </>
               ) : state === "error" ? (
                 <>
                   <WifiOff className="size-9" />
-                  <span className="text-sm">Камера офлайн или поток недоступен</span>
-                  <span className="text-xs underline">Повторить</span>
+                  <span className="text-sm">{m.cv_offline({}, { locale })}</span>
+                  <span className="text-xs underline">{m.cv_retry({}, { locale })}</span>
                 </>
               ) : (
                 <>
                   <span className="rounded-full bg-white/15 p-4 ring-1 ring-white/25">
                     <Play className="size-8 fill-white" />
                   </span>
-                  <span className="text-sm font-medium">Смотреть эфир</span>
+                  <span className="text-sm font-medium">{m.cv_watch({}, { locale })}</span>
                 </>
               )}
             </button>
@@ -173,6 +177,7 @@ function eventDuration(ev: MotionEvent): number {
 }
 
 function ArchiveCard({ cameraId, path, token }: { cameraId: string; path: string; token: string }) {
+  const [locale] = useAppLocale();
   const [segments, setSegments] = useState<ArchiveSegment[] | null>(null);
   const [events, setEvents] = useState<MotionEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -218,9 +223,9 @@ function ArchiveCard({ cameraId, path, token }: { cameraId: string; path: string
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Film className="size-4" /> Архив (7 дней)
+          <Film className="size-4" /> {m.cv_archive({}, { locale })}
         </CardTitle>
-        <Button size="sm" variant="ghost" onClick={refresh} title="Обновить">
+        <Button size="sm" variant="ghost" onClick={refresh} title={m.cv_refresh({}, { locale })}>
           <RefreshCw className="size-4" />
         </Button>
       </CardHeader>
@@ -232,7 +237,7 @@ function ArchiveCard({ cameraId, path, token }: { cameraId: string; path: string
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-muted text-muted-foreground">
               <Film className="size-8 opacity-40" />
-              <span className="text-sm">Выберите событие или запись ниже</span>
+              <span className="text-sm">{m.cv_pick({}, { locale })}</span>
             </div>
           )}
           {loadingClip && (
@@ -248,7 +253,7 @@ function ArchiveCard({ cameraId, path, token }: { cameraId: string; path: string
         {events.length > 0 && (
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5 text-sm font-medium">
-              <Zap className="size-4 text-primary" /> События движения
+              <Zap className="size-4 text-primary" /> {m.cv_events({}, { locale })}
             </div>
             <div className="max-h-40 overflow-y-auto rounded-md border divide-y">
               {events.map((ev) => {
@@ -272,7 +277,9 @@ function ArchiveCard({ cameraId, path, token }: { cameraId: string; path: string
                       {loadingClip === key ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />}
                     </span>
                     <span className="flex-1 font-medium">{fmt(new Date(ev.startedAt))}</span>
-                    <span className="text-xs text-muted-foreground">{ev.endedAt ? "движение" : "идёт…"}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {ev.endedAt ? m.cv_motion({}, { locale }) : m.cv_ongoing({}, { locale })}
+                    </span>
                   </button>
                 );
               })}
@@ -281,14 +288,14 @@ function ArchiveCard({ cameraId, path, token }: { cameraId: string; path: string
         )}
 
         {segments === null ? (
-          <p className="text-xs text-muted-foreground">Загрузка архива…</p>
+          <p className="text-xs text-muted-foreground">{m.cv_arch_loading({}, { locale })}</p>
         ) : segments.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Записей пока нет. Как камера начнёт вещать — здесь появится архив.</p>
+          <p className="text-xs text-muted-foreground">{m.cv_no_records({}, { locale })}</p>
         ) : (
           <>
             {/* Полоса-таймлайн: кликабельные блоки записей */}
             {span && (
-              <div className="relative h-7 rounded bg-muted overflow-hidden" title="Записи за период">
+              <div className="relative h-7 rounded bg-muted overflow-hidden" title={m.cv_period({}, { locale })}>
                 {segments.map((s) => {
                   const start = new Date(s.start).getTime();
                   const left = ((start - span.from) / span.width) * 100;
@@ -297,7 +304,7 @@ function ArchiveCard({ cameraId, path, token }: { cameraId: string; path: string
                     <button
                       key={s.start}
                       onClick={() => play(s)}
-                      title={`${fmt(new Date(s.start))} · ${Math.round(s.duration)} с — нажмите для просмотра`}
+                      title={`${fmt(new Date(s.start))} · ${Math.round(s.duration)} ${m.cv_sec({}, { locale })} — ${m.cv_click_to_view({}, { locale })}`}
                       className={cn(
                         "absolute top-0 h-full transition hover:brightness-110",
                         selected === s.start ? "bg-primary ring-2 ring-primary ring-inset" : "bg-primary/60 hover:bg-primary/80"
@@ -331,7 +338,9 @@ function ArchiveCard({ cameraId, path, token }: { cameraId: string; path: string
                       {loadingClip === s.start ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4 fill-current" />}
                     </span>
                     <span className="flex-1 font-medium">{fmt(new Date(s.start))}</span>
-                    <span className="text-xs text-muted-foreground">{Math.round(s.duration)} с</span>
+                    <span className="text-xs text-muted-foreground">
+                      {Math.round(s.duration)} {m.cv_sec({}, { locale })}
+                    </span>
                   </button>
                 );
               })}

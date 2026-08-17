@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Locale } from "./i18n";
+import { LOCALES, type Locale } from "./i18n";
 
 // Локаль ЛИЧНОГО КАБИНЕТА. У маркетинга локаль живёт в URL (/uk) ради SEO;
 // у кабинета SEO нет, поэтому локаль — выбор пользователя в localStorage.
@@ -10,9 +10,11 @@ const KEY = "oko-app-locale";
 const DEFAULT_LOCALE: Locale = "uk";
 
 export function readAppLocale(): Locale {
+  // Валидация против LOCALES, а не против списка литералов: добавление
+  // локали в i18n.ts не должно требовать правки ещё и здесь.
   try {
     const v = localStorage.getItem(KEY);
-    return v === "en" || v === "uk" ? v : DEFAULT_LOCALE;
+    return (LOCALES as readonly string[]).includes(v ?? "") ? (v as Locale) : DEFAULT_LOCALE;
   } catch {
     return DEFAULT_LOCALE;
   }

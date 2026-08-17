@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { m } from "@/paraglide/messages";
+import { useAppLocale } from "@/lib/app-locale";
 import { adoptDiscovered, type DiscoveredCamera } from "@/lib/api";
 import {
   Dialog,
@@ -21,6 +23,7 @@ type Props = {
 // Усыновление найденной ONVIF-камеры: облако уже знает адрес/производителя,
 // пользователь вводит только имя и учётные данные камеры (логин/пароль).
 export function AdoptCameraDialog({ camera, onOpenChange, onAdopted }: Props) {
+  const [locale] = useAppLocale();
   const [name, setName] = useState("");
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("");
@@ -29,7 +32,7 @@ export function AdoptCameraDialog({ camera, onOpenChange, onAdopted }: Props) {
 
   useEffect(() => {
     if (camera) {
-      setName(camera.name || camera.model || "Камера");
+      setName(camera.name || camera.model || m.cam_default_name({}, { locale }));
       setUsername("admin"); // самый частый ONVIF-логин; пользователь поправит
       setPassword("");
       setError(null);
@@ -60,23 +63,24 @@ export function AdoptCameraDialog({ camera, onOpenChange, onAdopted }: Props) {
     <Dialog open={camera !== null} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Подключить камеру</DialogTitle>
+          <DialogTitle>{m.adc_title({}, { locale })}</DialogTitle>
           <DialogDescription>
-            {subtitle ? `${subtitle} · ` : ""}Введите логин и пароль камеры — адрес потока подберётся автоматически (ONVIF).
+            {subtitle ? `${subtitle} · ` : ""}
+            {m.adc_desc({}, { locale })}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="ad-name">Название</Label>
-            <Input id="ad-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Двор, Вход…" />
+            <Label htmlFor="ad-name">{m.ccd_name({}, { locale })}</Label>
+            <Input id="ad-name" value={name} onChange={(e) => setName(e.target.value)} placeholder={m.ccd_name_ph({}, { locale })} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="ad-user">Логин камеры</Label>
+              <Label htmlFor="ad-user">{m.ccd_user({}, { locale })}</Label>
               <Input id="ad-user" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="off" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ad-pass">Пароль камеры</Label>
+              <Label htmlFor="ad-pass">{m.ccd_pass({}, { locale })}</Label>
               <Input
                 id="ad-pass"
                 type="password"
@@ -84,18 +88,15 @@ export function AdoptCameraDialog({ camera, onOpenChange, onAdopted }: Props) {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="off"
                 autoFocus
-                placeholder="можно пусто (ONVIF)"
+                placeholder={m.adc_pass_ph({}, { locale })}
               />
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Не знаете логин/пароль? Частый вариант — <b>admin</b> и <b>пустой пароль</b>. Точные — в родном
-            приложении камеры. Всё шифруется и используется только агентом в вашей сети, чтобы получить поток.
-          </p>
+          <p className="text-xs text-muted-foreground">{m.adc_help({}, { locale })}</p>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
             <Button type="submit" disabled={busy}>
-              {busy ? "Подключаю…" : "Подключить"}
+              {busy ? m.adc_submitting({}, { locale }) : m.cam_connect({}, { locale })}
             </Button>
           </DialogFooter>
         </form>

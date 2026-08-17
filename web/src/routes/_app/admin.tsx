@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Shield, Video, ScrollText, Users } from "lucide-react";
+import { m } from "@/paraglide/messages";
+import { useAppLocale } from "@/lib/app-locale";
 import { adminListCameras, adminAudit, type AdminCamera, type AuditEntry } from "@/lib/api";
 import { useSession, authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
@@ -13,6 +15,7 @@ export const Route = createFileRoute("/_app/admin")({ component: AdminPage });
 type AdminUser = { id: string; email: string; name?: string; role?: string; banned?: boolean; createdAt: string };
 
 function AdminPage() {
+  const [locale] = useAppLocale();
   const { data: session } = useSession();
   const isAdmin = (session?.user as { role?: string } | undefined)?.role === "admin";
   const myId = session?.user?.id;
@@ -25,7 +28,7 @@ function AdminPage() {
 
   async function loadUsers() {
     const res = await authClient.admin.listUsers({ query: { limit: 200 } });
-    if (res.error) return setError(res.error.message || "Ошибка загрузки пользователей");
+    if (res.error) return setError(res.error.message || m.adm_users_load_failed({}, { locale }));
     setUsers(((res.data as { users?: AdminUser[] })?.users ?? []) as AdminUser[]);
   }
 
@@ -41,7 +44,7 @@ function AdminPage() {
     setBusyUser(u.id);
     try {
       const res = await authClient.admin.setRole({ userId: u.id, role: next });
-      if (res.error) setError(res.error.message || "Не удалось сменить роль");
+      if (res.error) setError(res.error.message || m.adm_role_failed({}, { locale }));
       else await loadUsers();
     } finally {
       setBusyUser(null);
@@ -49,13 +52,13 @@ function AdminPage() {
   }
 
   async function resetUserPassword(u: AdminUser) {
-    const pw = prompt(`Новый пароль для ${u.email} (≥8 символов):`);
+    const pw = prompt(m.adm_reset_prompt({ email: u.email }, { locale }));
     if (!pw) return;
-    if (pw.length < 8) return setError("Пароль должен быть не короче 8 символов.");
+    if (pw.length < 8) return setError(m.login_password_short({}, { locale }));
     setBusyUser(u.id);
     try {
       const res = await authClient.admin.setUserPassword({ userId: u.id, newPassword: pw });
-      if (res.error) setError(res.error.message || "Не удалось сменить пароль");
+      if (res.error) setError(res.error.message || m.adm_pw_failed({}, { locale }));
       else setError(null);
     } finally {
       setBusyUser(null);
@@ -67,7 +70,7 @@ function AdminPage() {
       <Card>
         <CardContent className="py-12 text-center text-muted-foreground">
           <Shield className="size-8 mx-auto mb-2 opacity-50" />
-          Доступ только для администраторов.
+          {m.adm_only({}, { locale })}
         </CardContent>
       </Card>
     );
@@ -77,25 +80,26 @@ function AdminPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <Shield className="size-5" />
-        <h1 className="text-2xl font-semibold">Администрирование</h1>
+        <h1 className="text-2xl font-semibold">{m.adm_title({}, { locale })}</h1>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Users className="size-4" /> Пользователи {users && <Badge variant="secondary">{users.length}</Badge>}
+            <Users className="size-4" /> {m.adm_users({}, { locale })}{" "}
+            {users && <Badge variant="secondary">{users.length}</Badge>}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Имя</TableHead>
-                <TableHead>Роль</TableHead>
-                <TableHead>Регистрация</TableHead>
-                <TableHead className="text-right">Действия</TableHead>
+                <TableHead>{m.adm_col_email({}, { locale })}</TableHead>
+                <TableHead>{m.adm_col_name({}, { locale })}</TableHead>
+                <TableHead>{m.adm_col_role({}, { locale })}</TableHead>
+                <TableHead>{m.adm_col_created({}, { locale })}</TableHead>
+                <TableHead className="text-right">{m.adm_col_actions({}, { locale })}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -109,13 +113,13 @@ function AdminPage() {
                   <TableCell className="text-muted-foreground text-sm">{new Date(u.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button variant="ghost" size="sm" disabled={busyUser === u.id} onClick={() => resetUserPassword(u)}>
-                      Сбросить пароль
+                      {m.adm_reset_pw({}, { locale })}
                     </Button>
                     {u.id === myId ? (
-                      <span className="text-xs text-muted-foreground">это вы</span>
+                      <span className="text-xs text-muted-foreground">{m.adm_you({}, { locale })}</span>
                     ) : (
                       <Button variant="outline" size="sm" disabled={busyUser === u.id} onClick={() => toggleRole(u)}>
-                        {u.role === "admin" ? "Снять админа" : "Сделать админом"}
+                        {u.role === "admin" ? m.adm_remove_admin({}, { locale }) : m.adm_make_admin({}, { locale })}
                       </Button>
                     )}
                   </TableCell>
@@ -123,7 +127,9 @@ function AdminPage() {
               ))}
               {users && users.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">Пользователей нет.</TableCell>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    {m.adm_no_users({}, { locale })}
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>
@@ -134,18 +140,19 @@ function AdminPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Video className="size-4" /> Все камеры {cameras && <Badge variant="secondary">{cameras.length}</Badge>}
+            <Video className="size-4" /> {m.adm_cameras({}, { locale })}{" "}
+            {cameras && <Badge variant="secondary">{cameras.length}</Badge>}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Владелец</TableHead>
-                <TableHead>Название</TableHead>
-                <TableHead>Путь</TableHead>
-                <TableHead>Создана</TableHead>
-                <TableHead className="text-right">Действия</TableHead>
+                <TableHead>{m.adm_col_owner({}, { locale })}</TableHead>
+                <TableHead>{m.adm_col_name({}, { locale })}</TableHead>
+                <TableHead>{m.adm_col_path({}, { locale })}</TableHead>
+                <TableHead>{m.adm_col_created_at({}, { locale })}</TableHead>
+                <TableHead className="text-right">{m.adm_col_actions({}, { locale })}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -158,7 +165,7 @@ function AdminPage() {
                   <TableCell className="text-right">
                     <Button variant="secondary" size="sm" asChild>
                       <Link to="/camera/$cameraId" params={{ cameraId: c.id }}>
-                        <Video className="size-4" /> Смотреть
+                        <Video className="size-4" /> {m.adm_watch({}, { locale })}
                       </Link>
                     </Button>
                   </TableCell>
@@ -167,7 +174,7 @@ function AdminPage() {
               {cameras && cameras.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                    Камер пока нет.
+                    {m.adm_no_cameras({}, { locale })}
                   </TableCell>
                 </TableRow>
               )}
@@ -179,18 +186,18 @@ function AdminPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <ScrollText className="size-4" /> Журнал доступа
+            <ScrollText className="size-4" /> {m.adm_audit({}, { locale })}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Время</TableHead>
-                <TableHead>Кто</TableHead>
-                <TableHead>Роль</TableHead>
-                <TableHead>Действие</TableHead>
-                <TableHead>Камера</TableHead>
+                <TableHead>{m.adm_col_time({}, { locale })}</TableHead>
+                <TableHead>{m.adm_col_who({}, { locale })}</TableHead>
+                <TableHead>{m.adm_col_role({}, { locale })}</TableHead>
+                <TableHead>{m.adm_col_action({}, { locale })}</TableHead>
+                <TableHead>{m.adm_col_camera({}, { locale })}</TableHead>
                 <TableHead>IP</TableHead>
               </TableRow>
             </TableHeader>
@@ -210,7 +217,7 @@ function AdminPage() {
               {audit && audit.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    Просмотров пока не было.
+                    {m.adm_no_audit({}, { locale })}
                   </TableCell>
                 </TableRow>
               )}
