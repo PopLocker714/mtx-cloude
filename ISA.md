@@ -1,7 +1,7 @@
 ---
 principal_stated_goal: "Адаптировать сайт: разработать посадочную страницу для клиентов в двух языках (украинский и английский, русского не нужно). Изучить конкурентов — их сайты, тарифы, примерные цены; нам желательно цены как можно меньше. Обязательно отметить щедрый лимит: 7 дней видео бесплатно. Дизайн сейчас пустой — поработать над дизайном, посмотреть дизайны конкурентов под нашу тематику, придумать интересный."
 phase: complete
-progress: 15/15
+progress: 16/16
 slug: oko-landing
 ---
 
@@ -40,6 +40,8 @@ slug: oko-landing
 - [x] C14. Плавный скролл к якорям: клик «Тарифи» едет к #pricing анимированно, с отступом под sticky-шапку, reduced-motion отключает. Evidence: computed scroll-behavior:smooth + scroll-padding-top 80px; живой клик → hash #pricing, scrollY 2148.
 
 - [x] C15. Локальный вход в админку работает: .env создан (secrets сгенерированы, mode 600, git-ignored), postgres+backend в docker (порт 9998 только на 127.0.0.1 через git-ignored override, NODE_ENV=development для не-Secure куки), фронт указывает на локальный API. Evidence: браузерный E2E через саму форму /login → редирект /cameras, нав содержит /admin; скриншот админки (юзер admin@oko.local, роль admin).
+
+- [x] C16. Sidebar ЛК по M3 navigation drawer (фидбек, итерация 6): подсвечен только активный пункт (фикс data-[active=true] — data-active: матчил и "false"), пункты pill h-12 с иконками size-5, без бордера сайдбара, чёрные линии убраны глобально (base-слой border-color: var(--border) — в Tailwind v4 дефолт currentColor). Evidence: скриншот админки (выделена только «Админка»), eval spanW==scrollW (подписи не обрезаны — многоточия на скриншоте это артефакт рендера), коммит 49fde53.
 
 ## Anti-claims
 
