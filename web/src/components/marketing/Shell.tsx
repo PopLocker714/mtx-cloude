@@ -4,6 +4,7 @@ import { useState } from "react";
 import { m } from "@/paraglide/messages";
 import { Button } from "@/components/ui/button";
 import { pagePath, switchLocalePath, type Locale } from "@/lib/i18n";
+import { Reveal } from "./reveal";
 import "@fontsource/ibm-plex-mono/400.css";
 
 // Каркас публичных страниц: шапка, подвал, переключатель языка.
@@ -131,13 +132,15 @@ export function CtaBand({ locale }: { locale: Locale }) {
   return (
     <section className="border-t bg-muted/40">
       <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-          {m.cta_band_title({}, { locale })}
-        </h2>
-        <p className="mt-3 text-muted-foreground">{m.cta_band_body({}, { locale })}</p>
-        <Button asChild size="lg" className="mt-6">
-          <Link to="/login">{m.cta_band_button({}, { locale })}</Link>
-        </Button>
+        <Reveal>
+          <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
+            {m.cta_band_title({}, { locale })}
+          </h2>
+          <p className="mt-3 text-muted-foreground">{m.cta_band_body({}, { locale })}</p>
+          <Button asChild size="lg" className="mt-6">
+            <Link to="/login">{m.cta_band_button({}, { locale })}</Link>
+          </Button>
+        </Reveal>
       </div>
     </section>
   );

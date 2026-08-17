@@ -17,8 +17,10 @@ export function FeedCard({ locale }: { locale: Locale }) {
         <span className="ml-auto rounded-sm bg-signal/15 px-1.5 py-0.5 text-signal">LIVE</span>
       </div>
 
-      {/* «Кадр»: сетка, виньетка, рамка детекции движения */}
-      <div className="relative aspect-video">
+      {/* «Кадр»: сетка, виньетка, живая рамка детекции движения.
+          Рамка блуждает по кадру (cam-pan), сверху вниз ползёт слабый
+          скан-луч — камера «живая», а не статичная картинка. */}
+      <div className="relative aspect-video overflow-hidden">
         <div
           className="absolute inset-0 opacity-[0.13]"
           style={{
@@ -33,10 +35,18 @@ export function FeedCard({ locale }: { locale: Locale }) {
           style={{ background: "radial-gradient(ellipse at center, transparent 45%, rgb(0 0 0 / 0.5) 100%)" }}
           aria-hidden
         />
-        <div className="absolute left-[14%] top-[22%] h-[38%] w-[30%] rounded-sm border border-signal/70">
+        <div
+          className="absolute inset-x-0 h-10 animate-scanline"
+          style={{ background: "linear-gradient(to bottom, transparent, rgb(255 255 255 / 0.05), transparent)" }}
+          aria-hidden
+        />
+        <div className="absolute left-[14%] top-[22%] h-[38%] w-[30%] animate-cam-pan rounded-sm border border-signal/70">
           <span className="absolute -top-5 left-0 font-ticker text-[10px] tracking-wider text-signal">
             {m.feed_motion({}, { locale })}
           </span>
+          {/* Уголки рамки — как в настоящих трекерах */}
+          <span className="absolute -left-px -top-px size-2 border-l-2 border-t-2 border-signal" aria-hidden />
+          <span className="absolute -bottom-px -right-px size-2 border-b-2 border-r-2 border-signal" aria-hidden />
         </div>
         <span className="absolute bottom-3 right-4 font-ticker text-[11px] text-feed-faint">1080p · H.264</span>
       </div>
@@ -71,13 +81,16 @@ export function RetentionStrip({ locale }: { locale: Locale }) {
         {Array.from({ length: ghosts }, (_, i) => (
           <div
             key={`g${i}`}
-            className="h-10 flex-1 rounded-md border border-dashed border-white/15 sm:h-14"
-            style={{ opacity: 0.25 + i * 0.12 }}
+            className="seg h-10 flex-1 rounded-md border border-dashed border-white/15 sm:h-14"
+            style={{ opacity: 0.25 + i * 0.12, transitionDelay: `${i * 70}ms` }}
           />
         ))}
         {Array.from({ length: held }, (_, i) => (
           <div key={`h${i}`} className="flex-1">
-            <div className="h-14 rounded-md bg-primary/80 ring-1 ring-white/10 sm:h-20" />
+            <div
+              className="seg h-14 rounded-md bg-primary/80 ring-1 ring-white/10 sm:h-20"
+              style={{ transitionDelay: `${(ghosts + i) * 70}ms` }}
+            />
             <div className="mt-2 text-center font-ticker text-[10px] tracking-wider text-feed-faint">
               {i === held - 1 ? m.retention_today({}, { locale }) : `−${held - 1 - i}`}
             </div>

@@ -34,8 +34,11 @@ function AppLayout() {
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
-          <div className="flex items-center gap-2 px-2 py-1 font-semibold">
-            <Video className="size-5" /> oko-cloud
+          {/* Wordmark как на лендинге: oko + красная REC-точка. */}
+          <div className="flex items-baseline px-2 py-1">
+            <span className="font-display text-lg font-bold tracking-tight">oko</span>
+            <span className="ml-0.5 size-1.5 translate-y-[-1px] rounded-full bg-signal" aria-hidden />
+            <span className="ml-2 text-xs text-muted-foreground">cloud</span>
           </div>
         </SidebarHeader>
         <SidebarContent>
@@ -82,7 +85,7 @@ function AppLayout() {
       <SidebarInset>
         <header className="flex items-center gap-2 border-b px-4 h-14">
           <SidebarTrigger />
-          <span className="font-medium">Личный кабинет</span>
+          <span className="font-display font-semibold">Личный кабинет</span>
         </header>
         <main className="p-6">
           <Outlet />

@@ -10,37 +10,48 @@
  * Значения ниже — нейтральная палитра shadcn в oklch, светлая и тёмная.
  */
 
+/* Бренд-палитра живёт в :root и красит ВСЁ — маркетинг, ЛК и админку.
+ * Направление то же, что у лендинга: светлая инженерная поверхность,
+ * зелёный «під охороною» как primary, сигнальный красный для REC/live. */
 :root {
   --radius: 0.625rem;
 
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.985 0.002 240);
+  --foreground: oklch(0.22 0.02 255);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.22 0.02 255);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.22 0.02 255);
+  --primary: oklch(0.46 0.1 155);
+  --primary-foreground: oklch(0.985 0.002 240);
+  --secondary: oklch(0.955 0.004 240);
+  --secondary-foreground: oklch(0.22 0.02 255);
+  --muted: oklch(0.955 0.004 240);
+  --muted-foreground: oklch(0.5 0.015 250);
+  --accent: oklch(0.94 0.02 155);
+  --accent-foreground: oklch(0.32 0.06 155);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: oklch(0.9 0.006 240);
+  --input: oklch(0.9 0.006 240);
+  --ring: oklch(0.46 0.1 155);
 
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.97 0.004 240);
+  --sidebar-foreground: oklch(0.22 0.02 255);
+  --sidebar-primary: oklch(0.46 0.1 155);
+  --sidebar-primary-foreground: oklch(0.985 0.002 240);
+  --sidebar-accent: oklch(0.94 0.02 155);
+  --sidebar-accent-foreground: oklch(0.32 0.06 155);
+  --sidebar-border: oklch(0.9 0.006 240);
+  --sidebar-ring: oklch(0.46 0.1 155);
+
+  /* Мир камер: тёмный монитор и сигнальный красный. Глобально, чтобы
+   * wordmark с REC-точкой работал и в ЛК. */
+  --feed: oklch(0.18 0.015 255);
+  --feed-muted: oklch(0.28 0.015 255);
+  --feed-foreground: oklch(0.93 0.005 250);
+  --feed-faint: oklch(0.62 0.01 250);
+  --signal: oklch(0.6 0.21 25);
 }
 
 .dark {
@@ -148,34 +159,8 @@
   font-display: swap;
 }
 
-.marketing {
-  --background: oklch(0.985 0.002 240);
-  --foreground: oklch(0.22 0.02 255);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 255);
-  --primary: oklch(0.46 0.1 155);
-  --primary-foreground: oklch(0.985 0.002 240);
-  --secondary: oklch(0.955 0.004 240);
-  --secondary-foreground: oklch(0.22 0.02 255);
-  --muted: oklch(0.955 0.004 240);
-  --muted-foreground: oklch(0.5 0.015 250);
-  --accent: oklch(0.94 0.02 155);
-  --accent-foreground: oklch(0.32 0.06 155);
-  --border: oklch(0.9 0.006 240);
-  --input: oklch(0.9 0.006 240);
-  --ring: oklch(0.46 0.1 155);
-
-  /* Мир камер: тёмный монитор и сигнальный красный. */
-  --feed: oklch(0.18 0.015 255);
-  --feed-muted: oklch(0.28 0.015 255);
-  --feed-foreground: oklch(0.93 0.005 250);
-  --feed-faint: oklch(0.62 0.01 250);
-  --signal: oklch(0.6 0.21 25);
-
-  font-family: "Fixel Text", system-ui, -apple-system, sans-serif;
-  background-color: var(--background);
-  color: var(--foreground);
-}
+/* Палитра теперь в :root (см. выше) — .marketing больше не оверрайдит цвета,
+ * только включает reveal-механику ниже. Шрифт Fixel задан глобально на body. */
 
 @theme inline {
   --color-feed: var(--feed);
@@ -189,6 +174,8 @@
 
   --animate-rec: rec 1.6s ease-in-out infinite;
   --animate-fade-up: fade-up 0.7s ease-out both;
+  --animate-cam-pan: cam-pan 18s ease-in-out infinite;
+  --animate-scanline: scanline 9s linear infinite;
 
   @keyframes rec {
     0%, 100% { opacity: 1; }
@@ -197,6 +184,51 @@
   @keyframes fade-up {
     from { opacity: 0; transform: translateY(14px); }
     to { opacity: 1; transform: none; }
+  }
+  /* «Живая камера»: рамка детекции медленно блуждает по кадру,
+   * как будто следит за движением — то к одному краю, то к другому. */
+  @keyframes cam-pan {
+    0%, 100% { left: 14%; top: 22%; width: 30%; height: 38%; }
+    28% { left: 56%; top: 28%; width: 25%; height: 33%; }
+    52% { left: 40%; top: 44%; width: 31%; height: 36%; }
+    76% { left: 18%; top: 34%; width: 27%; height: 40%; }
+  }
+  @keyframes scanline {
+    from { transform: translateY(-120%); }
+    to { transform: translateY(1400%); }
+  }
+}
+
+/* Scroll-reveal: элемент невидим, пока не вошёл во вьюпорт; класс .in
+ * ставит IntersectionObserver из components/marketing/reveal.tsx. */
+.marketing .reveal {
+  opacity: 0;
+  translate: 0 18px;
+  transition: opacity 0.6s ease, translate 0.6s ease;
+}
+.marketing .reveal.in {
+  opacity: 1;
+  translate: 0 0;
+}
+/* Каскад для сегментов retention-полосы: прорастают снизу по очереди. */
+.marketing .reveal .seg {
+  opacity: 0;
+  transform: scaleY(0.15);
+  transform-origin: bottom;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.marketing .reveal.in .seg {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing .reveal,
+  .marketing .reveal .seg {
+    opacity: 1;
+    translate: 0 0;
+    transform: none;
+    transition: none;
   }
 }
 
@@ -224,4 +256,5 @@ body {
   margin: 0;
   background-color: var(--background);
   color: var(--foreground);
+  font-family: "Fixel Text", system-ui, -apple-system, sans-serif;
 }

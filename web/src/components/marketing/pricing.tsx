@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 import { m } from "@/paraglide/messages";
 import { Button } from "@/components/ui/button";
 import { pagePath, type Locale } from "@/lib/i18n";
+import { Reveal } from "./reveal";
 
 // Тарифы — витрина будущих планов: биллинга в продукте ещё нет, поэтому
 // у платных CTA «написать нам», а сноска честно говорит, что сегодня всё
@@ -66,21 +67,23 @@ export function PricingSection({ locale }: { locale: Locale }) {
   return (
     <section id="pricing" className="border-t">
       <div className="mx-auto max-w-6xl px-4 py-20">
-        <h2 className="text-center font-display text-3xl font-bold tracking-tight sm:text-4xl">
-          {m.pricing_title({}, { locale })}
-        </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">
-          {m.pricing_sub({}, { locale })}
-        </p>
+        <Reveal>
+          <h2 className="text-center font-display text-3xl font-bold tracking-tight sm:text-4xl">
+            {m.pricing_title({}, { locale })}
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">
+            {m.pricing_sub({}, { locale })}
+          </p>
+        </Reveal>
 
         <div className="mt-12 grid gap-6 lg:grid-cols-3">
-          {plans.map((p) => (
+          {plans.map((p, i) => (
+            <Reveal key={p.key} delay={i * 100}>
             <div
-              key={p.key}
               className={
                 p.highlighted
-                  ? "relative rounded-xl border-2 border-primary bg-card p-6 shadow-lg"
-                  : "rounded-xl border bg-card p-6"
+                  ? "relative h-full rounded-xl border-2 border-primary bg-card p-6 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  : "h-full rounded-xl border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
               }
             >
               {p.highlighted && (
@@ -118,6 +121,7 @@ export function PricingSection({ locale }: { locale: Locale }) {
                 )}
               </Button>
             </div>
+            </Reveal>
           ))}
         </div>
 

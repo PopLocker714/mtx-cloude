@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { MarketingShell, CtaBand } from "./Shell";
 import { FeedCard, RetentionStrip } from "./visuals";
 import { PricingSection } from "./pricing";
+import { Reveal } from "./reveal";
 import { pagePath, type Locale } from "@/lib/i18n";
 
 // Публичные страницы. Каждая принимает локаль сверху и передаёт её в каждый
@@ -75,32 +76,41 @@ export function HomePage({ locale }: { locale: Locale }) {
       {/* Стена совместимости — у категории она заменяет логотипы клиентов. */}
       <section className="border-t">
         <div className="mx-auto max-w-6xl px-4 py-10">
-          <p className="text-center text-sm text-muted-foreground">{m.brands_label({}, { locale })}</p>
-          <ul className="mt-5 flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
-            {CAMERA_BRANDS.map((b) => (
-              <li key={b} className="font-display text-lg font-semibold tracking-tight text-foreground/60">
-                {b}
-              </li>
-            ))}
-          </ul>
-          <p className="mt-5 text-center font-ticker text-xs tracking-wide text-muted-foreground">
-            {m.brands_any({}, { locale })}
-          </p>
+          <Reveal>
+            <p className="text-center text-sm text-muted-foreground">{m.brands_label({}, { locale })}</p>
+            <ul className="mt-5 flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
+              {CAMERA_BRANDS.map((b) => (
+                <li
+                  key={b}
+                  className="font-display text-lg font-semibold tracking-tight text-foreground/60 transition-colors hover:text-foreground"
+                >
+                  {b}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-5 text-center font-ticker text-xs tracking-wide text-muted-foreground">
+              {m.brands_any({}, { locale })}
+            </p>
+          </Reveal>
         </div>
       </section>
 
       <section className="border-t">
         <div className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="text-center font-display text-2xl font-bold tracking-tight sm:text-3xl">
-            {m.value_title({}, { locale })}
-          </h2>
+          <Reveal>
+            <h2 className="text-center font-display text-2xl font-bold tracking-tight sm:text-3xl">
+              {m.value_title({}, { locale })}
+            </h2>
+          </Reveal>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {values.map((v) => (
-              <div key={v.t} className="rounded-xl border bg-card p-6">
-                <v.icon className="size-6 text-primary" />
-                <h3 className="mt-4 font-display font-semibold">{v.t}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{v.b}</p>
-              </div>
+            {values.map((v, i) => (
+              <Reveal key={v.t} delay={i * 90}>
+                <div className="h-full rounded-xl border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                  <v.icon className="size-6 text-primary" />
+                  <h3 className="mt-4 font-display font-semibold">{v.t}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{v.b}</p>
+                </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -110,33 +120,39 @@ export function HomePage({ locale }: { locale: Locale }) {
       <section className="bg-feed text-feed-foreground">
         <div className="mx-auto max-w-6xl px-4 py-20">
           <div className="grid items-center gap-10 lg:grid-cols-[1fr_1.2fr]">
-            <div>
+            <Reveal>
               <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
                 {m.retention_title({}, { locale })}
               </h2>
               <p className="mt-4 text-feed-faint">{m.retention_body({}, { locale })}</p>
-            </div>
-            <RetentionStrip locale={locale} />
+            </Reveal>
+            <Reveal delay={150}>
+              <RetentionStrip locale={locale} />
+            </Reveal>
           </div>
         </div>
       </section>
 
       <section className="border-t bg-muted/30">
         <div className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="text-center font-display text-2xl font-bold tracking-tight sm:text-3xl">
-            {m.steps_title({}, { locale })}
-          </h2>
+          <Reveal>
+            <h2 className="text-center font-display text-2xl font-bold tracking-tight sm:text-3xl">
+              {m.steps_title({}, { locale })}
+            </h2>
+          </Reveal>
           <ol className="mt-10 grid gap-8 md:grid-cols-3">
             {steps.map((s, i) => (
               <li key={s.t}>
-                <div className="flex items-center gap-3">
-                  <span className="flex size-8 items-center justify-center rounded-full bg-primary font-ticker text-sm font-medium text-primary-foreground">
-                    {i + 1}
-                  </span>
-                  <s.icon className="size-5 text-muted-foreground" />
-                </div>
-                <h3 className="mt-4 font-display font-semibold">{s.t}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{s.b}</p>
+                <Reveal delay={i * 110}>
+                  <div className="flex items-center gap-3">
+                    <span className="flex size-8 items-center justify-center rounded-full bg-primary font-ticker text-sm font-medium text-primary-foreground">
+                      {i + 1}
+                    </span>
+                    <s.icon className="size-5 text-muted-foreground" />
+                  </div>
+                  <h3 className="mt-4 font-display font-semibold">{s.t}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{s.b}</p>
+                </Reveal>
               </li>
             ))}
           </ol>
