@@ -230,7 +230,7 @@ function BridgesPage() {
               onChange={(e) => setClaimCode(e.target.value.toUpperCase())}
               placeholder="ABCD-EFGH"
               autoFocus
-              className="w-full rounded-md border bg-background px-3 py-2 text-center text-2xl font-mono tracking-widest uppercase"
+              className="h-14 w-full rounded-xl border bg-background px-4 text-center text-2xl font-mono tracking-widest uppercase"
             />
             {claimError && <p className="text-sm text-destructive">{claimError}</p>}
           </div>

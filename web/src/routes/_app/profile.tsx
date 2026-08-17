@@ -227,7 +227,9 @@ function ProfilePage() {
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             {ok && <p className="text-sm text-primary">{m.prof_pw_changed({}, { locale })}</p>}
-            <Button type="submit" disabled={loading}>{loading ? "…" : m.prof_pw_submit({}, { locale })}</Button>
+            <Button type="submit" size="lg" disabled={loading}>
+              {loading ? "…" : m.prof_pw_submit({}, { locale })}
+            </Button>
           </form>
         </CardContent>
       </Card>

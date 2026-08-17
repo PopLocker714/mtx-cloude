@@ -224,7 +224,7 @@ export function ConnectCameraDialog({ open, onOpenChange, existingId, onCreated 
                       id="bridge"
                       value={bridgeId}
                       onChange={(e) => setBridgeId(e.target.value)}
-                      className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                      className="h-12 w-full rounded-xl border bg-background px-4 text-base"
                     >
                       {bridges.map((b) => (
                         <option key={b.id} value={b.id}>
@@ -334,7 +334,8 @@ export function ConnectCameraDialog({ open, onOpenChange, existingId, onCreated 
                 </span>
               )}
             </button>
-            <Button type="submit" disabled={busy || (mode === "bridge" && bridges.length === 0)}>
+            {/* size=lg — чтобы кнопка не выглядела мельче полей формы (48px). */}
+            <Button type="submit" size="lg" disabled={busy || (mode === "bridge" && bridges.length === 0)}>
               {busy ? "…" : mode === "bridge" ? m.ccd_submit_add({}, { locale }) : m.ccd_submit_create({}, { locale })}
             </Button>
           </DialogFooter>

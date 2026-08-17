@@ -95,7 +95,7 @@ export function AdoptCameraDialog({ camera, onOpenChange, onAdopted }: Props) {
           <p className="text-xs text-muted-foreground">{m.adc_help({}, { locale })}</p>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
-            <Button type="submit" disabled={busy}>
+            <Button type="submit" size="lg" disabled={busy}>
               {busy ? m.adc_submitting({}, { locale }) : m.cam_connect({}, { locale })}
             </Button>
           </DialogFooter>
