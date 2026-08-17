@@ -52,6 +52,12 @@ export const auth = betterAuth({
     },
   },
   advanced: {
+    // Свой префикс куки: на localhost у разработчика живут ДРУГИЕ Better Auth
+    // проекты с дефолтным именем better-auth.session_token, и их Secure-куку
+    // нельзя перезаписать нашей не-Secure (Strict Secure Cookies) — логин
+    // молча не работает. oko.session_token ни с кем не конфликтует.
+    // ВНИМАНИЕ: смена имени куки разлогинивает существующие сессии один раз.
+    cookiePrefix: "oko",
     // За реверс-прокси (Traefik) реальный IP клиента — в X-Forwarded-For. Нужно для корректного
     // per-IP rate-limit (иначе Better Auth валит всех в одно общее ведро).
     ipAddress: { ipAddressHeaders: ["x-forwarded-for", "x-real-ip"] },

@@ -12,3 +12,4 @@ node_modules/
 web/.output/
 web/.nitro/
 web/dist/
+docker-compose.override.yml
