@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Camera as CameraIcon, Server, Archive, Check, Copy, ArrowRight, Circle } from "lucide-react";
+import { m } from "@/paraglide/messages";
 import { listCameras, listBridges, type Camera, type Bridge } from "@/lib/api";
 import { API_BASE } from "@/lib/api-base";
+import { useAppLocale } from "@/lib/app-locale";
+import type { Locale } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,11 +13,11 @@ import { Badge } from "@/components/ui/badge";
 export const Route = createFileRoute("/_app/home")({ component: HomeDashboard });
 
 // Главная ЛК. Два состояния: онбординг «Get started», пока нет камер
-// (шаги с реальной docker-командой и живым кодом привязки), и обзор
+// (шаги с реальной командой установки и живым кодом привязки), и обзор
 // со stat-плитками, когда камеры уже есть. Графиков нет намеренно:
 // временных рядов API пока не отдаёт, рисовать нечего.
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({ text, label }: { text: string; label: string }) {
   const [ok, setOk] = useState(false);
   return (
     <Button
@@ -22,7 +25,7 @@ function CopyButton({ text }: { text: string }) {
       variant="ghost"
       size="icon-sm"
       className="shrink-0 text-feed-faint hover:bg-white/10 hover:text-feed-foreground"
-      aria-label="Скопировать"
+      aria-label={label}
       onClick={() => {
         navigator.clipboard.writeText(text).then(() => {
           setOk(true);
@@ -36,7 +39,7 @@ function CopyButton({ text }: { text: string }) {
 }
 
 /** Онбординг: три шага до первой камеры, с отметками done по факту. */
-function GetStarted({ bridges }: { bridges: Bridge[] }) {
+function GetStarted({ bridges, locale }: { bridges: Bridge[]; locale: Locale }) {
   const hasBridge = bridges.length > 0;
   const paired = bridges.some((b) => b.paired);
   const pairCode = bridges.find((b) => !b.paired && b.pairingCode)?.pairingCode;
@@ -45,39 +48,42 @@ function GetStarted({ bridges }: { bridges: Bridge[] }) {
   // и systemd-сервис) и Docker для тех, у кого он уже есть.
   const installCmd = pairCode
     ? `curl -fsSL ${API_BASE}/i/${pairCode} | sh`
-    : `curl -fsSL ${API_BASE}/install.sh | OKO_PAIR_CODE=<КОД-ПРИВЯЗКИ> sh`;
+    : `curl -fsSL ${API_BASE}/install.sh | OKO_PAIR_CODE=<CODE> sh`;
   const dockerCmd = `docker run -d --name oko-bridge --restart unless-stopped --network host \\
-  -e OKO_API=${API_BASE} -e OKO_PAIR_CODE=${pairCode ?? "<КОД-ПРИВЯЗКИ>"} \\
+  -e OKO_API=${API_BASE} -e OKO_PAIR_CODE=${pairCode ?? "<CODE>"} \\
   -v oko-bridge-data:/data ghcr.io/poplocker714/oko-bridge:latest`;
+
+  const copyLabel = m.home_copy({}, { locale });
 
   const steps = [
     {
       done: hasBridge,
-      title: "Добавьте bridge",
-      body: "Bridge — небольшая программа в сети камер. Она сама найдёт камеры и отдаст поток в облако; наружу ничего открывать не нужно.",
+      title: m.home_s1_title({}, { locale }),
+      body: m.home_s1_body({}, { locale }),
       action: (
         <Button asChild size="sm" variant={hasBridge ? "secondary" : "default"}>
           <Link to="/bridges">
-            {hasBridge ? "К списку bridge" : "Получить код привязки"} <ArrowRight data-icon="inline-end" />
+            {hasBridge ? m.home_s1_btn_done({}, { locale }) : m.home_s1_btn({}, { locale })}{" "}
+            <ArrowRight data-icon="inline-end" />
           </Link>
         </Button>
       ),
     },
     {
       done: paired,
-      title: "Запустите bridge в сети камер",
-      body: "Одна команда на любой Linux-машине рядом с камерами: мини-ПК, Raspberry Pi, старый компьютер. Скрипт сам поставит агент, ffmpeg и автозапуск; Docker не нужен. Есть Docker и он вам привычнее — второй вариант.",
+      title: m.home_s2_title({}, { locale }),
+      body: m.home_s2_body({}, { locale }),
       action: (
         <div className="space-y-2">
           <div className="flex items-start gap-2 rounded-xl bg-feed p-4 text-feed-foreground">
             <pre className="overflow-x-auto font-ticker text-xs leading-relaxed">{installCmd}</pre>
-            <CopyButton text={installCmd} />
+            <CopyButton text={installCmd} label={copyLabel} />
           </div>
           <details className="text-xs opacity-80">
-            <summary className="cursor-pointer select-none">…или через Docker</summary>
+            <summary className="cursor-pointer select-none">{m.home_s2_docker({}, { locale })}</summary>
             <div className="mt-2 flex items-start gap-2 rounded-xl bg-feed p-4 text-feed-foreground">
               <pre className="overflow-x-auto font-ticker text-xs leading-relaxed">{dockerCmd}</pre>
-              <CopyButton text={dockerCmd} />
+              <CopyButton text={dockerCmd} label={copyLabel} />
             </div>
           </details>
         </div>
@@ -85,12 +91,12 @@ function GetStarted({ bridges }: { bridges: Bridge[] }) {
     },
     {
       done: false,
-      title: "Подключите камеру",
-      body: "Привязанный bridge просканирует сеть по ONVIF и покажет найденные камеры — останется ввести пароль камеры. Семь дней архива каждой камеры — бесплатно.",
+      title: m.home_s3_title({}, { locale }),
+      body: m.home_s3_body({}, { locale }),
       action: (
         <Button asChild size="sm" variant={paired ? "default" : "secondary"} disabled={!paired}>
           <Link to="/cameras">
-            К камерам <ArrowRight data-icon="inline-end" />
+            {m.home_s3_btn({}, { locale })} <ArrowRight data-icon="inline-end" />
           </Link>
         </Button>
       ),
@@ -99,10 +105,8 @@ function GetStarted({ bridges }: { bridges: Bridge[] }) {
 
   return (
     <div className="rounded-3xl bg-accent p-8 text-accent-foreground">
-      <h2 className="font-display text-2xl font-medium">Подключите первую камеру</h2>
-      <p className="mt-2 max-w-2xl opacity-80">
-        Обычно это занимает около десяти минут. Три шага — и в облаке появится живая картинка и семидневный архив.
-      </p>
+      <h2 className="font-display text-2xl font-medium">{m.home_gs_title({}, { locale })}</h2>
+      <p className="mt-2 max-w-2xl opacity-80">{m.home_gs_sub({}, { locale })}</p>
       <ol className="mt-8 space-y-6">
         {steps.map((s, i) => (
           <li key={s.title} className="flex gap-4">
@@ -150,16 +154,16 @@ function StatTile({
 }
 
 /** Статус словом + точкой: цвет никогда не единственный носитель смысла. */
-function OnlineBadge({ online }: { online: boolean }) {
+function OnlineBadge({ online, locale }: { online: boolean; locale: Locale }) {
   return (
     <Badge variant="outline" className={online ? "border-primary/40 text-primary" : "text-muted-foreground"}>
       <Circle className={`size-2 ${online ? "fill-primary" : "fill-muted-foreground/50"}`} />
-      {online ? "онлайн" : "офлайн"}
+      {online ? m.home_online({}, { locale }) : m.home_offline({}, { locale })}
     </Badge>
   );
 }
 
-function Dashboard({ cameras, bridges }: { cameras: Camera[]; bridges: Bridge[] }) {
+function Dashboard({ cameras, bridges, locale }: { cameras: Camera[]; bridges: Bridge[]; locale: Locale }) {
   const camsOnline = cameras.filter((c) => c.online).length;
   const bridgesOnline = bridges.filter((b) => b.online).length;
   return (
@@ -167,24 +171,29 @@ function Dashboard({ cameras, bridges }: { cameras: Camera[]; bridges: Bridge[] 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatTile
           icon={CameraIcon}
-          label="Камеры"
+          label={m.home_tile_cameras({}, { locale })}
           value={String(cameras.length)}
-          sub={<OnlineBadge online={camsOnline > 0} />}
+          sub={<OnlineBadge online={camsOnline > 0} locale={locale} />}
         />
         <StatTile
           icon={Server}
-          label="Bridge"
+          label={m.home_tile_bridges({}, { locale })}
           value={String(bridges.length)}
-          sub={`онлайн: ${bridgesOnline} из ${bridges.length}`}
+          sub={m.home_online_of({ online: String(bridgesOnline), total: String(bridges.length) }, { locale })}
         />
-        <StatTile icon={Archive} label="Архив" value="7 дней" sub="по кругу, бесплатно для каждой камеры" />
+        <StatTile
+          icon={Archive}
+          label={m.home_tile_archive({}, { locale })}
+          value={m.home_tile_archive_value({}, { locale })}
+          sub={m.home_tile_archive_sub({}, { locale })}
+        />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Камеры</CardTitle>
+          <CardTitle className="text-base">{m.home_cameras_list({}, { locale })}</CardTitle>
           <CardDescription>
-            онлайн {camsOnline} из {cameras.length}
+            {m.home_online_of({ online: String(camsOnline), total: String(cameras.length) }, { locale })}
           </CardDescription>
         </CardHeader>
         <CardContent className="divide-y">
@@ -198,7 +207,7 @@ function Dashboard({ cameras, bridges }: { cameras: Camera[]; bridges: Bridge[] 
               <CameraIcon className="size-4 text-muted-foreground" />
               <span className="min-w-0 flex-1 truncate font-medium">{c.name}</span>
               <span className="hidden font-ticker text-xs text-muted-foreground sm:inline">{c.path}</span>
-              <OnlineBadge online={c.online} />
+              <OnlineBadge online={c.online} locale={locale} />
             </Link>
           ))}
         </CardContent>
@@ -208,6 +217,7 @@ function Dashboard({ cameras, bridges }: { cameras: Camera[]; bridges: Bridge[] 
 }
 
 function HomeDashboard() {
+  const [locale] = useAppLocale();
   const [cameras, setCameras] = useState<Camera[] | null>(null);
   const [bridges, setBridges] = useState<Bridge[] | null>(null);
 
@@ -224,12 +234,16 @@ function HomeDashboard() {
   }, []);
 
   if (cameras === null || bridges === null)
-    return <p className="text-sm text-muted-foreground">Загрузка…</p>;
+    return <p className="text-sm text-muted-foreground">{m.app_loading({}, { locale })}</p>;
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <h1 className="font-display text-2xl font-medium">Главная</h1>
-      {cameras.length === 0 ? <GetStarted bridges={bridges} /> : <Dashboard cameras={cameras} bridges={bridges} />}
+      <h1 className="font-display text-2xl font-medium">{m.home_title({}, { locale })}</h1>
+      {cameras.length === 0 ? (
+        <GetStarted bridges={bridges} locale={locale} />
+      ) : (
+        <Dashboard cameras={cameras} bridges={bridges} locale={locale} />
+      )}
     </div>
   );
 }

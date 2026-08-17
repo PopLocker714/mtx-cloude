@@ -12,8 +12,8 @@ import { Reveal } from "./reveal";
 // Валюта по локали: en → $, uk → ₴ (₴99/₴199 — округление вниз от курса).
 
 const PRICE = {
-  start: { en: "$2.49", uk: "₴99" },
-  plus: { en: "$4.99", uk: "₴199" },
+  start: { en: "$2.49", uk: "₴99", ru: "₴99" },
+  plus: { en: "$4.99", uk: "₴199", ru: "₴199" },
 } as const;
 
 type Plan = {
@@ -29,7 +29,7 @@ export function PricingSection({ locale }: { locale: Locale }) {
     {
       key: "free",
       name: () => m.plan_free_name({}, { locale }),
-      price: (l) => (l === "uk" ? "₴0" : "$0"),
+      price: (l) => (l === "en" ? "$0" : "₴0"),
       features: (l) => [
         m.plan_free_f1({}, { locale: l }),
         m.plan_free_f2({}, { locale: l }),

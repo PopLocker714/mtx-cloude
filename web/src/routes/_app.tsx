@@ -2,7 +2,10 @@ import { createFileRoute, Outlet, useNavigate, Link, useRouterState } from "@tan
 import { useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
 import { Video, LogOut, Shield, User, Server, House } from "lucide-react";
+import { m } from "@/paraglide/messages";
 import { useSession, signOut } from "@/lib/auth-client";
+import { useAppLocale } from "@/lib/app-locale";
+import { LOCALES, LOCALE_LABELS, type Locale } from "@/lib/i18n";
 import { applySeedToElement, clearSeedFromElement, loadSeed } from "@/lib/m3-theme";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -54,13 +57,15 @@ function AppLayout() {
   const { data: session, isPending } = useSession();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [locale, setLocale] = useAppLocale();
 
   // Гард: не залогинен → на /login (клиентский, для v0 достаточно).
   useEffect(() => {
     if (!isPending && !session) navigate({ to: "/login" });
   }, [isPending, session, navigate]);
 
-  if (isPending || !session) return <div className="p-8 text-muted-foreground">Загрузка…</div>;
+  if (isPending || !session)
+    return <div className="p-8 text-muted-foreground">{m.app_loading({}, { locale })}</div>;
 
   return (
     <AppThemeScope>
@@ -80,28 +85,28 @@ function AppLayout() {
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={pathname.startsWith("/home")}>
                 <Link to="/home">
-                  <House /> <span>Главная</span>
+                  <House /> <span>{m.app_nav_home({}, { locale })}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={pathname.startsWith("/cameras") || pathname.startsWith("/camera/")}>
                 <Link to="/cameras">
-                  <Video /> <span>Камеры</span>
+                  <Video /> <span>{m.app_nav_cameras({}, { locale })}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={pathname.startsWith("/bridges")}>
                 <Link to="/bridges">
-                  <Server /> <span>Bridge</span>
+                  <Server /> <span>{m.app_nav_bridges({}, { locale })}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={pathname.startsWith("/profile")}>
                 <Link to="/profile">
-                  <User /> <span>Профиль</span>
+                  <User /> <span>{m.app_nav_profile({}, { locale })}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -109,7 +114,7 @@ function AppLayout() {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname.startsWith("/admin")}>
                   <Link to="/admin">
-                    <Shield /> <span>Админка</span>
+                    <Shield /> <span>{m.app_nav_admin({}, { locale })}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -119,15 +124,28 @@ function AppLayout() {
         <SidebarFooter>
           <div className="px-2 text-xs text-muted-foreground truncate">{session.user.email}</div>
           <Button variant="ghost" size="sm" className="justify-start" onClick={() => signOut().then(() => navigate({ to: "/login" }))}>
-            <LogOut className="size-4" /> Выйти
+            <LogOut className="size-4" /> {m.app_signout({}, { locale })}
           </Button>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
         <header className="flex items-center gap-2 border-b px-4 h-14">
           <SidebarTrigger />
-          <span className="font-display font-semibold">Личный кабинет</span>
-          <div className="ml-auto">
+          <span className="font-display font-semibold">{m.app_title({}, { locale })}</span>
+          <div className="ml-auto flex items-center gap-2">
+            {/* Язык кабинета — выбор пользователя, живёт в localStorage. */}
+            <select
+              value={locale}
+              onChange={(e) => setLocale(e.target.value as Locale)}
+              aria-label="Language"
+              className="rounded-full border bg-background px-2 py-1 text-xs font-medium"
+            >
+              {LOCALES.map((l) => (
+                <option key={l} value={l}>
+                  {LOCALE_LABELS[l]}
+                </option>
+              ))}
+            </select>
             <ThemeToggle />
           </div>
         </header>

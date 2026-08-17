@@ -1,5 +1,7 @@
 import { m } from "@/paraglide/messages";
-import { alternateLinks, alternateLinksUk, pageUrl, SITE_URL, type Locale, type Page } from "./i18n";
+import { alternateLinksFor, pageUrl, SITE_URL, type Locale, type Page } from "./i18n";
+
+export const OG_LOCALE: Record<Locale, string> = { en: "en_US", uk: "uk_UA", ru: "ru_RU" };
 
 // Заголовки и описания страниц в одном месте: маршрут просит head для своей
 // страницы и локали, а не собирает мета-теги руками. Так пара en/uk не может
@@ -32,10 +34,10 @@ export function pageHead(page: Page, locale: Locale) {
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
       { property: "og:url", content: pageUrl(page, locale) },
-      { property: "og:locale", content: locale === "uk" ? "uk_UA" : "en_US" },
+      { property: "og:locale", content: OG_LOCALE[locale] },
       { property: "og:image", content: `${SITE_URL}/logo512.png` },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: locale === "uk" ? alternateLinksUk(page) : alternateLinks(page),
+    links: alternateLinksFor(page, locale),
   };
 }

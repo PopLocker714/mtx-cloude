@@ -183,17 +183,17 @@ export function HowItWorksPage({ locale }: { locale: Locale }) {
 
         {/* Схема пути потока — три узла, одна стрелка в одну сторону.
             Направление здесь несёт смысл: наружу открывает мост, а не мы. */}
-        <div className="mt-10 flex flex-col items-stretch gap-3 rounded-lg border p-6 text-center text-sm sm:flex-row sm:items-center">
-          <div className="flex-1 rounded-md bg-muted/50 px-4 py-3 font-medium">
-            {locale === "uk" ? "Камера" : "Camera"}
+        <div className="mt-10 flex flex-col items-stretch gap-3 rounded-[20px] bg-muted p-6 text-center text-sm sm:flex-row sm:items-center">
+          <div className="flex-1 rounded-xl bg-card px-4 py-3 font-medium">
+            {m.how_node_camera({}, { locale })}
           </div>
           <div className="text-muted-foreground">→</div>
-          <div className="flex-1 rounded-md bg-muted/50 px-4 py-3 font-medium">
-            {locale === "uk" ? "Міст у вашій мережі" : "Bridge on your network"}
+          <div className="flex-1 rounded-xl bg-card px-4 py-3 font-medium">
+            {m.how_node_bridge({}, { locale })}
           </div>
           <div className="text-muted-foreground">→</div>
-          <div className="flex-1 rounded-md bg-muted/50 px-4 py-3 font-medium">
-            {locale === "uk" ? "Хмара oko" : "oko cloud"}
+          <div className="flex-1 rounded-xl bg-card px-4 py-3 font-medium">
+            {m.how_node_cloud({}, { locale })}
           </div>
         </div>
 

@@ -31,7 +31,26 @@ const T = {
     all: "All guides",
     open: "Open",
   },
+  ru: {
+    title: "Инструкции по подключению камер",
+    intro:
+      "Как включить ONVIF или RTSP на популярных камерах и подключить их к oko. Не нашли свою камеру? Если она говорит RTSP или ONVIF — она подойдёт: поищите в её настройках пункты с этими словами.",
+    steps: "Шаги",
+    rtsp: "RTSP-адреса (замените IP на адрес вашей камеры)",
+    creds: "Логин и пароль",
+    caveats: "Нюансы",
+    all: "Все инструкции",
+    open: "Открыть",
+  },
 } as const;
+
+/** Путь страницы гайда в локали — для Link. */
+function guideLinkTo(locale: Locale): string {
+  return locale === "en" ? "/guides/$slug" : locale === "uk" ? "/uk/guides/$slug" : "/ru/guides/$slug";
+}
+function guidesIndexTo(locale: Locale): string {
+  return locale === "en" ? "/guides" : locale === "uk" ? "/uk/guides" : "/ru/guides";
+}
 
 export function GuidesIndexPage({ locale }: { locale: Locale }) {
   const t = T[locale];
@@ -44,7 +63,7 @@ export function GuidesIndexPage({ locale }: { locale: Locale }) {
           {GUIDES.map((g, i) => (
             <Reveal key={g.slug} delay={i * 60}>
               <Link
-                to={locale === "uk" ? "/uk/guides/$slug" : "/guides/$slug"}
+                to={guideLinkTo(locale)}
                 params={{ slug: g.slug }}
                 className="flex h-full items-center justify-between gap-4 rounded-[28px] bg-card p-6 transition-shadow hover:shadow-md"
               >
@@ -69,10 +88,7 @@ export function GuidePage({ guide, locale }: { guide: Guide; locale: Locale }) {
   return (
     <MarketingShell locale={locale}>
       <div className="mx-auto max-w-3xl px-4 py-16">
-        <Link
-          to={locale === "uk" ? "/uk/guides" : "/guides"}
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
+        <Link to={guidesIndexTo(locale)} className="text-sm text-muted-foreground hover:text-foreground">
           ← {t.all}
         </Link>
         <h1 className="mt-4 font-display text-3xl font-medium sm:text-4xl">{c.title}</h1>

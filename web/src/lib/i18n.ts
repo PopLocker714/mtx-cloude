@@ -10,9 +10,12 @@
 // не проиндексирует украинскую версию: робот приходит без куки и с чужими
 // заголовками, и увидел бы английский на украинском адресе.
 
-export const LOCALES = ["en", "uk"] as const;
+// ru добавлен по решению Ильи (итерация 9): не все в Украине говорят
+// украинским, локализуем на три языка. en остаётся базовым (без префикса).
+export const LOCALES = ["en", "uk", "ru"] as const;
 export type Locale = (typeof LOCALES)[number];
 export const BASE_LOCALE: Locale = "en";
+export const LOCALE_LABELS: Record<Locale, string> = { en: "EN", uk: "УК", ru: "РУ" };
 
 // Публичный адрес сайта — нужен для canonical, hreflang и sitemap,
 // которым обязательны абсолютные URL.
@@ -42,33 +45,31 @@ export function pageUrl(page: Page, locale: Locale): string {
  * ссылается на uk, а uk на en не ссылается, поисковик пару не склеит.
  * x-default отдаём на базовую локаль. Код языка именно `uk` — `ua` невалиден.
  */
-export function alternateLinks(page: Page) {
+export function alternateLinksFor(page: Page, canonical: Locale) {
   return [
-    { rel: "canonical", href: pageUrl(page, "en") },
+    { rel: "canonical", href: pageUrl(page, canonical) },
     ...LOCALES.map((l) => ({ rel: "alternate", hreflang: l, href: pageUrl(page, l) })),
     { rel: "alternate", hreflang: "x-default", href: pageUrl(page, BASE_LOCALE) },
   ];
 }
 
-/** Те же альтернативы, но canonical указывает на украинскую версию страницы. */
-export function alternateLinksUk(page: Page) {
-  return [
-    { rel: "canonical", href: pageUrl(page, "uk") },
-    ...LOCALES.map((l) => ({ rel: "alternate", hreflang: l, href: pageUrl(page, l) })),
-    { rel: "alternate", hreflang: "x-default", href: pageUrl(page, BASE_LOCALE) },
-  ];
-}
+// Старые имена — обёртки, чтобы не трогать существующие вызовы.
+export const alternateLinks = (page: Page) => alternateLinksFor(page, "en");
+export const alternateLinksUk = (page: Page) => alternateLinksFor(page, "uk");
 
 /** Локаль по пути — для атрибута lang у <html> в корневом шелле. */
 export function localeFromPath(pathname: string): Locale {
-  return pathname === "/uk" || pathname.startsWith("/uk/") ? "uk" : "en";
+  for (const l of LOCALES) {
+    if (l === BASE_LOCALE) continue;
+    if (pathname === `/${l}` || pathname.startsWith(`/${l}/`)) return l;
+  }
+  return BASE_LOCALE;
 }
 
-/** Тот же путь в другой локали — для переключателя языка. */
-export function switchLocalePath(pathname: string): string {
-  if (localeFromPath(pathname) === "uk") {
-    const rest = pathname.replace(/^\/uk/, "");
-    return rest || "/";
-  }
-  return pathname === "/" ? "/uk" : `/uk${pathname}`;
+/** Тот же путь в целевой локали — для трёхъязычного переключателя. */
+export function pathInLocale(pathname: string, target: Locale): string {
+  const current = localeFromPath(pathname);
+  const rest = current === BASE_LOCALE ? pathname : pathname.replace(new RegExp(`^/${current}`), "") || "/";
+  if (target === BASE_LOCALE) return rest || "/";
+  return rest === "/" ? `/${target}` : `/${target}${rest}`;
 }

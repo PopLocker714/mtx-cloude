@@ -3,7 +3,7 @@ import { Menu } from "lucide-react";
 import { useState } from "react";
 import { m } from "@/paraglide/messages";
 import { Button } from "@/components/ui/button";
-import { pagePath, switchLocalePath, type Locale } from "@/lib/i18n";
+import { pagePath, pathInLocale, LOCALES, LOCALE_LABELS, type Locale } from "@/lib/i18n";
 import { Reveal } from "./reveal";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -76,13 +76,23 @@ export function MarketingShell({ locale, children }: { locale: Locale; children:
           <div className="ml-auto flex items-center gap-2">
             {/* Переключатель ведёт на ТОТ ЖЕ путь в другой локали, а не на главную:
                 увести читателя с середины FAQ на титульную — потерять его. */}
-            <Link
-              to={switchLocalePath(pathname)}
-              className="rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-              hrefLang={locale === "uk" ? "en" : "uk"}
-            >
-              {m.nav_lang({}, { locale })}
-            </Link>
+            {/* Трёхъязычный переключатель: тот же путь в целевой локали. */}
+            <div className="flex items-center rounded-full border border-border p-0.5 text-xs font-medium">
+              {LOCALES.map((l) => (
+                <Link
+                  key={l}
+                  to={pathInLocale(pathname, l)}
+                  hrefLang={l}
+                  className={
+                    l === locale
+                      ? "rounded-full bg-secondary px-2.5 py-1 text-secondary-foreground"
+                      : "rounded-full px-2.5 py-1 text-muted-foreground transition-colors hover:text-foreground"
+                  }
+                >
+                  {LOCALE_LABELS[l]}
+                </Link>
+              ))}
+            </div>
             <ThemeToggle />
             <Button asChild size="sm" variant="outline" className="hidden rounded-full sm:inline-flex">
               <Link to="/login">{m.nav_signin({}, { locale })}</Link>

@@ -23,6 +23,7 @@ export type Guide = {
   brand: string;
   uk: GuideContent;
   en: GuideContent;
+  ru: GuideContent;
 };
 
 export const GUIDES: Guide[] = [
@@ -79,6 +80,31 @@ export const GUIDES: Guide[] = [
         "After enabling ONVIF, power-cycle the camera.",
       ],
     },
+    ru: {
+      title: "Как включить ONVIF на камере V380 Pro",
+      metaTitle: "V380 Pro: включить ONVIF/RTSP — инструкция oko",
+      metaDesc:
+        "Пошаговая инструкция: как в приложении V380 Pro включить ONVIF, узнать RTSP-адрес камеры и подключить её к облачному архиву oko.",
+      intro:
+        "Камеры V380 работают через собственное приложение, но в большинстве прошивок есть переключатель ONVIF. После его включения камеру видит bridge oko.",
+      steps: [
+        "Откройте приложение V380 Pro и убедитесь, что камера добавлена и показывает живое видео.",
+        "Откройте настройки камеры (шестерёнка на карточке камеры).",
+        "Найдите пункт «Настройки ONVIF» (иногда он в разделе «Локальный доступ» или «LAN»). Включите переключатель.",
+        "Если приложение предложит задать пароль ONVIF — задайте и запишите его: именно он пойдёт в поле «Пароль камеры» в oko.",
+        "IP-адрес камеры смотрите там же в информации об устройстве или в списке клиентов вашего роутера.",
+        "В oko: Камеры → Добавить камеру → введите IP, логин и пароль — bridge подхватит поток сам.",
+      ],
+      rtsp: [
+        { label: "Основной поток", url: "rtsp://IP:8554/live/ch00_0" },
+        { label: "Второй поток (экономнее)", url: "rtsp://IP:8554/live/ch00_1" },
+      ],
+      creds: "Типичный логин — admin, пароль пустой или тот, что вы задали при первой настройке камеры.",
+      caveats: [
+        "Пункты меню отличаются между версиями приложения и прошивками. Если пункта ONVIF нет вообще — ваша прошивка его не поддерживает, и камера сможет работать только через приложение производителя.",
+        "После включения ONVIF перезагрузите камеру (выключите и включите питание).",
+      ],
+    },
   },
   {
     slug: "tp-link-tapo",
@@ -129,6 +155,30 @@ export const GUIDES: Guide[] = [
       caveats: [
         "Some firmwares hide the item until the camera is linked to a TP-Link cloud account.",
         "Battery-powered Tapo models cannot keep a continuous RTSP stream.",
+      ],
+    },
+    ru: {
+      title: "Как подключить TP-Link Tapo: аккаунт камеры и RTSP",
+      metaTitle: "TP-Link Tapo: аккаунт камеры, ONVIF/RTSP — инструкция oko",
+      metaDesc:
+        "Как создать «аккаунт камеры» в приложении Tapo, узнать RTSP-адрес и подключить камеру к облачной записи oko.",
+      intro:
+        "У Tapo ONVIF и RTSP работают через отдельный «аккаунт камеры», который создаётся в приложении. Это и есть логин/пароль для oko.",
+      steps: [
+        "Откройте приложение Tapo, выберите камеру.",
+        "Нажмите шестерёнку → «Дополнительные настройки» (Advanced Settings).",
+        "Откройте «Аккаунт камеры» (Camera Account) и создайте логин и пароль.",
+        "IP-адрес камеры виден в настройках Wi-Fi камеры или в списке клиентов роутера.",
+        "В oko: Камеры → Добавить камеру → IP, логин и пароль из «аккаунта камеры».",
+      ],
+      rtsp: [
+        { label: "Основной поток (HD)", url: "rtsp://IP:554/stream1" },
+        { label: "Второй поток (SD)", url: "rtsp://IP:554/stream2" },
+      ],
+      creds: "Логин и пароль — те, что вы создали в «Аккаунте камеры». Аккаунт TP-Link ID здесь НЕ подходит.",
+      caveats: [
+        "Некоторые прошивки прячут пункт, пока камера не привязана к облачному аккаунту TP-Link.",
+        "Батарейные модели Tapo не держат постоянный RTSP-поток.",
       ],
     },
   },
@@ -183,6 +233,30 @@ export const GUIDES: Guide[] = [
         "Several wrong password attempts lock the camera out temporarily — wait a few minutes.",
       ],
     },
+    ru: {
+      title: "Hikvision: включить ONVIF и подключить к oko",
+      metaTitle: "Hikvision: ONVIF/RTSP — инструкция oko",
+      metaDesc:
+        "Как в веб-интерфейсе Hikvision включить ONVIF (Integration Protocol), создать ONVIF-пользователя и подключить камеру к oko.",
+      intro: "На камерах Hikvision ONVIF по умолчанию выключен. Включается в веб-интерфейсе камеры за две минуты.",
+      steps: [
+        "Откройте веб-интерфейс камеры: http://IP-камеры в браузере, войдите под admin.",
+        "Configuration → Network → Advanced Settings → Integration Protocol.",
+        "Поставьте галочку «Enable ONVIF» (Open Network Video Interface).",
+        "Добавьте ONVIF-пользователя (кнопка Add): уровень — Administrator или Operator. Эти логин/пароль пойдут в oko.",
+        "Сохраните. В oko: Камеры → Добавить камеру → IP + ONVIF-пользователь.",
+      ],
+      rtsp: [
+        { label: "Основной поток", url: "rtsp://IP:554/Streaming/Channels/101" },
+        { label: "Второй поток", url: "rtsp://IP:554/Streaming/Channels/102" },
+      ],
+      creds:
+        "Логин admin и пароль, заданный при активации камеры, либо отдельный ONVIF-пользователь, если вы его создали.",
+      caveats: [
+        "На старых прошивках пункт называется просто ONVIF в Network → Advanced.",
+        "После нескольких неверных попыток пароля камера временно блокирует вход — подождите несколько минут.",
+      ],
+    },
   },
   {
     slug: "dahua",
@@ -231,6 +305,28 @@ export const GUIDES: Guide[] = [
         "If the stream does not start, check that Access Platform enables ONVIF specifically, not just P2P.",
       ],
     },
+    ru: {
+      title: "Dahua: ONVIF и RTSP для подключения к oko",
+      metaTitle: "Dahua: ONVIF/RTSP — инструкция oko",
+      metaDesc: "Как включить ONVIF на камере Dahua, формат RTSP-ссылки и подключение к облачному архиву oko.",
+      intro: "У Dahua ONVIF обычно включён, но в новых прошивках авторизация ONVIF отдельная от веб-логина.",
+      steps: [
+        "Откройте веб-интерфейс камеры: http://IP-камеры, войдите под admin.",
+        "Settings → Network → Access Platform (в некоторых прошивках — ONVIF).",
+        "Убедитесь, что ONVIF включён; если есть переключатель «Authentication via ONVIF» — включите.",
+        "Логин/пароль для ONVIF — те же admin/пароль камеры (в новых прошивках можно создать отдельного пользователя).",
+        "В oko: Камеры → Добавить камеру → IP + логин/пароль.",
+      ],
+      rtsp: [
+        { label: "Основной поток", url: "rtsp://IP:554/cam/realmonitor?channel=1&subtype=0" },
+        { label: "Второй поток", url: "rtsp://IP:554/cam/realmonitor?channel=1&subtype=1" },
+      ],
+      creds: "Логин admin и пароль, заданный при инициализации камеры.",
+      caveats: [
+        "Перемаркированные камеры (Amcrest, EZ-IP и т.п.) используют те же пути RTSP.",
+        "Если поток не идёт — проверьте, что в Access Platform включён именно ONVIF, а не только P2P.",
+      ],
+    },
   },
   {
     slug: "reolink",
@@ -277,6 +373,27 @@ export const GUIDES: Guide[] = [
         "Newer models may use H.265 on the main stream — if browser playback fails, switch the camera to H.264 or use the sub stream.",
       ],
     },
+    ru: {
+      title: "Reolink: подключение к oko через RTSP/ONVIF",
+      metaTitle: "Reolink: ONVIF/RTSP — инструкция oko",
+      metaDesc: "Как проверить RTSP/ONVIF на камере Reolink и подключить её к облачной записи oko.",
+      intro: "На большинстве проводных Reolink RTSP и ONVIF включены из коробки — остаётся только пароль.",
+      steps: [
+        "Откройте приложение Reolink или веб-интерфейс камеры.",
+        "Настройки камеры → Network → Advanced → Port Settings: убедитесь, что RTSP и ONVIF включены.",
+        "Логин admin, пароль — ваш пароль камеры.",
+        "В oko: Камеры → Добавить камеру → IP + admin + пароль.",
+      ],
+      rtsp: [
+        { label: "Основной поток", url: "rtsp://IP:554/h264Preview_01_main" },
+        { label: "Второй поток", url: "rtsp://IP:554/h264Preview_01_sub" },
+      ],
+      creds: "Логин admin и пароль, который вы задали камере при первой настройке.",
+      caveats: [
+        "Батарейные модели Reolink (Argus и похожие) не поддерживают RTSP вообще.",
+        "На новых моделях основной поток может быть H.265 — если просмотр в браузере не идёт, выберите в камере H.264 или подключите второй поток.",
+      ],
+    },
   },
 ];
 
@@ -286,7 +403,7 @@ export function guideBySlug(slug: string): Guide | undefined {
 
 /** Абсолютный URL страницы гайда в локали. */
 export function guideUrl(slug: string | null, locale: Locale): string {
-  const prefix = locale === "uk" ? "/uk" : "";
+  const prefix = locale === "en" ? "" : `/${locale}`;
   return `${SITE_URL}${prefix}/guides${slug ? `/${slug}` : ""}`;
 }
 
@@ -300,7 +417,7 @@ export function guideHead(slug: string | null, locale: Locale, title: string, de
       { property: "og:description", content: description },
       { property: "og:type", content: "article" },
       { property: "og:url", content: guideUrl(slug, locale) },
-      { property: "og:locale", content: locale === "uk" ? "uk_UA" : "en_US" },
+      { property: "og:locale", content: locale === "ru" ? "ru_RU" : locale === "uk" ? "uk_UA" : "en_US" },
       { property: "og:image", content: `${SITE_URL}/logo512.png` },
     ],
     links: [

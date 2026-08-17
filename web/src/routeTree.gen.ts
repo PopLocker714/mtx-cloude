@@ -27,11 +27,17 @@ import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as GuidesIndexRouteImport } from './routes/guides/index'
 import { Route as GuidesSlugRouteImport } from './routes/guides/$slug'
+import { Route as RuIndexRouteImport } from './routes/ru/index'
+import { Route as RuContactRouteImport } from './routes/ru/contact'
+import { Route as RuFaqRouteImport } from './routes/ru/faq'
+import { Route as RuHowItWorksRouteImport } from './routes/ru/how-it-works'
 import { Route as UkIndexRouteImport } from './routes/uk/index'
 import { Route as UkContactRouteImport } from './routes/uk/contact'
 import { Route as UkFaqRouteImport } from './routes/uk/faq'
 import { Route as UkHowItWorksRouteImport } from './routes/uk/how-it-works'
 import { Route as AppCameraCameraIdRouteImport } from './routes/_app/camera.$cameraId'
+import { Route as RuGuidesIndexRouteImport } from './routes/ru/guides/index'
+import { Route as RuGuidesSlugRouteImport } from './routes/ru/guides/$slug'
 import { Route as UkGuidesIndexRouteImport } from './routes/uk/guides/index'
 import { Route as UkGuidesSlugRouteImport } from './routes/uk/guides/$slug'
 
@@ -124,6 +130,26 @@ const GuidesSlugRoute = GuidesSlugRouteImport.update({
   path: '/guides/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RuIndexRoute = RuIndexRouteImport.update({
+  id: '/ru/',
+  path: '/ru/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RuContactRoute = RuContactRouteImport.update({
+  id: '/ru/contact',
+  path: '/ru/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RuFaqRoute = RuFaqRouteImport.update({
+  id: '/ru/faq',
+  path: '/ru/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RuHowItWorksRoute = RuHowItWorksRouteImport.update({
+  id: '/ru/how-it-works',
+  path: '/ru/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UkIndexRoute = UkIndexRouteImport.update({
   id: '/uk/',
   path: '/uk/',
@@ -148,6 +174,16 @@ const AppCameraCameraIdRoute = AppCameraCameraIdRouteImport.update({
   id: '/camera/$cameraId',
   path: '/camera/$cameraId',
   getParentRoute: () => AppRoute,
+} as any)
+const RuGuidesIndexRoute = RuGuidesIndexRouteImport.update({
+  id: '/ru/guides/',
+  path: '/ru/guides/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RuGuidesSlugRoute = RuGuidesSlugRouteImport.update({
+  id: '/ru/guides/$slug',
+  path: '/ru/guides/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const UkGuidesIndexRoute = UkGuidesIndexRouteImport.update({
   id: '/uk/guides/',
@@ -177,13 +213,19 @@ export interface FileRoutesByFullPath {
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
   '/guides/$slug': typeof GuidesSlugRoute
+  '/ru/contact': typeof RuContactRoute
+  '/ru/faq': typeof RuFaqRoute
+  '/ru/how-it-works': typeof RuHowItWorksRoute
   '/uk/contact': typeof UkContactRoute
   '/uk/faq': typeof UkFaqRoute
   '/uk/how-it-works': typeof UkHowItWorksRoute
   '/guides/': typeof GuidesIndexRoute
+  '/ru/': typeof RuIndexRoute
   '/uk/': typeof UkIndexRoute
   '/camera/$cameraId': typeof AppCameraCameraIdRoute
+  '/ru/guides/$slug': typeof RuGuidesSlugRoute
   '/uk/guides/$slug': typeof UkGuidesSlugRoute
+  '/ru/guides/': typeof RuGuidesIndexRoute
   '/uk/guides/': typeof UkGuidesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -203,13 +245,19 @@ export interface FileRoutesByTo {
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
   '/guides/$slug': typeof GuidesSlugRoute
+  '/ru/contact': typeof RuContactRoute
+  '/ru/faq': typeof RuFaqRoute
+  '/ru/how-it-works': typeof RuHowItWorksRoute
   '/uk/contact': typeof UkContactRoute
   '/uk/faq': typeof UkFaqRoute
   '/uk/how-it-works': typeof UkHowItWorksRoute
   '/guides': typeof GuidesIndexRoute
+  '/ru': typeof RuIndexRoute
   '/uk': typeof UkIndexRoute
   '/camera/$cameraId': typeof AppCameraCameraIdRoute
+  '/ru/guides/$slug': typeof RuGuidesSlugRoute
   '/uk/guides/$slug': typeof UkGuidesSlugRoute
+  '/ru/guides': typeof RuGuidesIndexRoute
   '/uk/guides': typeof UkGuidesIndexRoute
 }
 export interface FileRoutesById {
@@ -231,13 +279,19 @@ export interface FileRoutesById {
   '/_app/home': typeof AppHomeRoute
   '/_app/profile': typeof AppProfileRoute
   '/guides/$slug': typeof GuidesSlugRoute
+  '/ru/contact': typeof RuContactRoute
+  '/ru/faq': typeof RuFaqRoute
+  '/ru/how-it-works': typeof RuHowItWorksRoute
   '/uk/contact': typeof UkContactRoute
   '/uk/faq': typeof UkFaqRoute
   '/uk/how-it-works': typeof UkHowItWorksRoute
   '/guides/': typeof GuidesIndexRoute
+  '/ru/': typeof RuIndexRoute
   '/uk/': typeof UkIndexRoute
   '/_app/camera/$cameraId': typeof AppCameraCameraIdRoute
+  '/ru/guides/$slug': typeof RuGuidesSlugRoute
   '/uk/guides/$slug': typeof UkGuidesSlugRoute
+  '/ru/guides/': typeof RuGuidesIndexRoute
   '/uk/guides/': typeof UkGuidesIndexRoute
 }
 export interface FileRouteTypes {
@@ -259,13 +313,19 @@ export interface FileRouteTypes {
     | '/home'
     | '/profile'
     | '/guides/$slug'
+    | '/ru/contact'
+    | '/ru/faq'
+    | '/ru/how-it-works'
     | '/uk/contact'
     | '/uk/faq'
     | '/uk/how-it-works'
     | '/guides/'
+    | '/ru/'
     | '/uk/'
     | '/camera/$cameraId'
+    | '/ru/guides/$slug'
     | '/uk/guides/$slug'
+    | '/ru/guides/'
     | '/uk/guides/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -285,13 +345,19 @@ export interface FileRouteTypes {
     | '/home'
     | '/profile'
     | '/guides/$slug'
+    | '/ru/contact'
+    | '/ru/faq'
+    | '/ru/how-it-works'
     | '/uk/contact'
     | '/uk/faq'
     | '/uk/how-it-works'
     | '/guides'
+    | '/ru'
     | '/uk'
     | '/camera/$cameraId'
+    | '/ru/guides/$slug'
     | '/uk/guides/$slug'
+    | '/ru/guides'
     | '/uk/guides'
   id:
     | '__root__'
@@ -312,13 +378,19 @@ export interface FileRouteTypes {
     | '/_app/home'
     | '/_app/profile'
     | '/guides/$slug'
+    | '/ru/contact'
+    | '/ru/faq'
+    | '/ru/how-it-works'
     | '/uk/contact'
     | '/uk/faq'
     | '/uk/how-it-works'
     | '/guides/'
+    | '/ru/'
     | '/uk/'
     | '/_app/camera/$cameraId'
+    | '/ru/guides/$slug'
     | '/uk/guides/$slug'
+    | '/ru/guides/'
     | '/uk/guides/'
   fileRoutesById: FileRoutesById
 }
@@ -335,12 +407,18 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   GuidesSlugRoute: typeof GuidesSlugRoute
+  RuContactRoute: typeof RuContactRoute
+  RuFaqRoute: typeof RuFaqRoute
+  RuHowItWorksRoute: typeof RuHowItWorksRoute
   UkContactRoute: typeof UkContactRoute
   UkFaqRoute: typeof UkFaqRoute
   UkHowItWorksRoute: typeof UkHowItWorksRoute
   GuidesIndexRoute: typeof GuidesIndexRoute
+  RuIndexRoute: typeof RuIndexRoute
   UkIndexRoute: typeof UkIndexRoute
+  RuGuidesSlugRoute: typeof RuGuidesSlugRoute
   UkGuidesSlugRoute: typeof UkGuidesSlugRoute
+  RuGuidesIndexRoute: typeof RuGuidesIndexRoute
   UkGuidesIndexRoute: typeof UkGuidesIndexRoute
 }
 
@@ -472,6 +550,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuidesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ru/': {
+      id: '/ru/'
+      path: '/ru'
+      fullPath: '/ru/'
+      preLoaderRoute: typeof RuIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ru/contact': {
+      id: '/ru/contact'
+      path: '/ru/contact'
+      fullPath: '/ru/contact'
+      preLoaderRoute: typeof RuContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ru/faq': {
+      id: '/ru/faq'
+      path: '/ru/faq'
+      fullPath: '/ru/faq'
+      preLoaderRoute: typeof RuFaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ru/how-it-works': {
+      id: '/ru/how-it-works'
+      path: '/ru/how-it-works'
+      fullPath: '/ru/how-it-works'
+      preLoaderRoute: typeof RuHowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/uk/': {
       id: '/uk/'
       path: '/uk'
@@ -506,6 +612,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/camera/$cameraId'
       preLoaderRoute: typeof AppCameraCameraIdRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/ru/guides/': {
+      id: '/ru/guides/'
+      path: '/ru/guides'
+      fullPath: '/ru/guides/'
+      preLoaderRoute: typeof RuGuidesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ru/guides/$slug': {
+      id: '/ru/guides/$slug'
+      path: '/ru/guides/$slug'
+      fullPath: '/ru/guides/$slug'
+      preLoaderRoute: typeof RuGuidesSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/uk/guides/': {
       id: '/uk/guides/'
@@ -557,12 +677,18 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   GuidesSlugRoute: GuidesSlugRoute,
+  RuContactRoute: RuContactRoute,
+  RuFaqRoute: RuFaqRoute,
+  RuHowItWorksRoute: RuHowItWorksRoute,
   UkContactRoute: UkContactRoute,
   UkFaqRoute: UkFaqRoute,
   UkHowItWorksRoute: UkHowItWorksRoute,
   GuidesIndexRoute: GuidesIndexRoute,
+  RuIndexRoute: RuIndexRoute,
   UkIndexRoute: UkIndexRoute,
+  RuGuidesSlugRoute: RuGuidesSlugRoute,
   UkGuidesSlugRoute: UkGuidesSlugRoute,
+  RuGuidesIndexRoute: RuGuidesIndexRoute,
   UkGuidesIndexRoute: UkGuidesIndexRoute,
 }
 export const routeTree = rootRouteImport
