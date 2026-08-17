@@ -41,6 +41,11 @@ function GetStarted({ bridges }: { bridges: Bridge[] }) {
   const paired = bridges.some((b) => b.paired);
   const pairCode = bridges.find((b) => !b.paired && b.pairingCode)?.pairingCode;
 
+  // Два равных способа установки: скрипт (без Docker; ставит бинарник, ffmpeg
+  // и systemd-сервис) и Docker для тех, у кого он уже есть.
+  const installCmd = pairCode
+    ? `curl -fsSL ${API_BASE}/i/${pairCode} | sh`
+    : `curl -fsSL ${API_BASE}/install.sh | OKO_PAIR_CODE=<КОД-ПРИВЯЗКИ> sh`;
   const dockerCmd = `docker run -d --name oko-bridge --restart unless-stopped --network host \\
   -e OKO_API=${API_BASE} -e OKO_PAIR_CODE=${pairCode ?? "<КОД-ПРИВЯЗКИ>"} \\
   -v oko-bridge-data:/data ghcr.io/poplocker714/oko-bridge:latest`;
@@ -61,11 +66,20 @@ function GetStarted({ bridges }: { bridges: Bridge[] }) {
     {
       done: paired,
       title: "Запустите bridge в сети камер",
-      body: "Одна команда на любой Linux-машине рядом с камерами: мини-ПК, Raspberry Pi, старый компьютер. После запуска bridge привяжется по коду сам.",
+      body: "Одна команда на любой Linux-машине рядом с камерами: мини-ПК, Raspberry Pi, старый компьютер. Скрипт сам поставит агент, ffmpeg и автозапуск; Docker не нужен. Есть Docker и он вам привычнее — второй вариант.",
       action: (
-        <div className="flex items-start gap-2 rounded-xl bg-feed p-4 text-feed-foreground">
-          <pre className="overflow-x-auto font-ticker text-xs leading-relaxed">{dockerCmd}</pre>
-          <CopyButton text={dockerCmd} />
+        <div className="space-y-2">
+          <div className="flex items-start gap-2 rounded-xl bg-feed p-4 text-feed-foreground">
+            <pre className="overflow-x-auto font-ticker text-xs leading-relaxed">{installCmd}</pre>
+            <CopyButton text={installCmd} />
+          </div>
+          <details className="text-xs opacity-80">
+            <summary className="cursor-pointer select-none">…или через Docker</summary>
+            <div className="mt-2 flex items-start gap-2 rounded-xl bg-feed p-4 text-feed-foreground">
+              <pre className="overflow-x-auto font-ticker text-xs leading-relaxed">{dockerCmd}</pre>
+              <CopyButton text={dockerCmd} />
+            </div>
+          </details>
         </div>
       ),
     },

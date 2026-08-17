@@ -9,6 +9,7 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { LOCALES, PAGES, pageUrl } from "../src/lib/i18n";
+import { GUIDES, guideUrl } from "../src/lib/guides";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(HERE, "..", "public", "sitemap.xml");
@@ -31,6 +32,25 @@ const urls = PAGES.flatMap((page) =>
     ].join("\n");
   })
 );
+
+// Статьи /guides/<slug> — тем же правилом взаимных hreflang.
+const guideUrls = GUIDES.flatMap((g) =>
+  LOCALES.map((locale) => {
+    const alternates = LOCALES.map(
+      (l) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${guideUrl(g.slug, l)}"/>`
+    ).join("\n");
+    return [
+      "  <url>",
+      `    <loc>${guideUrl(g.slug, locale)}</loc>`,
+      alternates,
+      `    <xhtml:link rel="alternate" hreflang="x-default" href="${guideUrl(g.slug, "en")}"/>`,
+      `    <changefreq>monthly</changefreq>`,
+      `    <priority>0.6</priority>`,
+      "  </url>",
+    ].join("\n");
+  })
+);
+urls.push(...guideUrls);
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"

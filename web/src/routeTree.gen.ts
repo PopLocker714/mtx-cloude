@@ -25,11 +25,15 @@ import { Route as AppBridgesRouteImport } from './routes/_app/bridges'
 import { Route as AppCamerasRouteImport } from './routes/_app/cameras'
 import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
+import { Route as GuidesIndexRouteImport } from './routes/guides/index'
+import { Route as GuidesSlugRouteImport } from './routes/guides/$slug'
 import { Route as UkIndexRouteImport } from './routes/uk/index'
 import { Route as UkContactRouteImport } from './routes/uk/contact'
 import { Route as UkFaqRouteImport } from './routes/uk/faq'
 import { Route as UkHowItWorksRouteImport } from './routes/uk/how-it-works'
 import { Route as AppCameraCameraIdRouteImport } from './routes/_app/camera.$cameraId'
+import { Route as UkGuidesIndexRouteImport } from './routes/uk/guides/index'
+import { Route as UkGuidesSlugRouteImport } from './routes/uk/guides/$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -110,6 +114,16 @@ const AppProfileRoute = AppProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AppRoute,
 } as any)
+const GuidesIndexRoute = GuidesIndexRouteImport.update({
+  id: '/guides/',
+  path: '/guides/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidesSlugRoute = GuidesSlugRouteImport.update({
+  id: '/guides/$slug',
+  path: '/guides/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UkIndexRoute = UkIndexRouteImport.update({
   id: '/uk/',
   path: '/uk/',
@@ -135,6 +149,16 @@ const AppCameraCameraIdRoute = AppCameraCameraIdRouteImport.update({
   path: '/camera/$cameraId',
   getParentRoute: () => AppRoute,
 } as any)
+const UkGuidesIndexRoute = UkGuidesIndexRouteImport.update({
+  id: '/uk/guides/',
+  path: '/uk/guides/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UkGuidesSlugRoute = UkGuidesSlugRouteImport.update({
+  id: '/uk/guides/$slug',
+  path: '/uk/guides/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -152,11 +176,15 @@ export interface FileRoutesByFullPath {
   '/cameras': typeof AppCamerasRoute
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/uk/contact': typeof UkContactRoute
   '/uk/faq': typeof UkFaqRoute
   '/uk/how-it-works': typeof UkHowItWorksRoute
+  '/guides/': typeof GuidesIndexRoute
   '/uk/': typeof UkIndexRoute
   '/camera/$cameraId': typeof AppCameraCameraIdRoute
+  '/uk/guides/$slug': typeof UkGuidesSlugRoute
+  '/uk/guides/': typeof UkGuidesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -174,11 +202,15 @@ export interface FileRoutesByTo {
   '/cameras': typeof AppCamerasRoute
   '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/uk/contact': typeof UkContactRoute
   '/uk/faq': typeof UkFaqRoute
   '/uk/how-it-works': typeof UkHowItWorksRoute
+  '/guides': typeof GuidesIndexRoute
   '/uk': typeof UkIndexRoute
   '/camera/$cameraId': typeof AppCameraCameraIdRoute
+  '/uk/guides/$slug': typeof UkGuidesSlugRoute
+  '/uk/guides': typeof UkGuidesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -198,11 +230,15 @@ export interface FileRoutesById {
   '/_app/cameras': typeof AppCamerasRoute
   '/_app/home': typeof AppHomeRoute
   '/_app/profile': typeof AppProfileRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/uk/contact': typeof UkContactRoute
   '/uk/faq': typeof UkFaqRoute
   '/uk/how-it-works': typeof UkHowItWorksRoute
+  '/guides/': typeof GuidesIndexRoute
   '/uk/': typeof UkIndexRoute
   '/_app/camera/$cameraId': typeof AppCameraCameraIdRoute
+  '/uk/guides/$slug': typeof UkGuidesSlugRoute
+  '/uk/guides/': typeof UkGuidesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -222,11 +258,15 @@ export interface FileRouteTypes {
     | '/cameras'
     | '/home'
     | '/profile'
+    | '/guides/$slug'
     | '/uk/contact'
     | '/uk/faq'
     | '/uk/how-it-works'
+    | '/guides/'
     | '/uk/'
     | '/camera/$cameraId'
+    | '/uk/guides/$slug'
+    | '/uk/guides/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -244,11 +284,15 @@ export interface FileRouteTypes {
     | '/cameras'
     | '/home'
     | '/profile'
+    | '/guides/$slug'
     | '/uk/contact'
     | '/uk/faq'
     | '/uk/how-it-works'
+    | '/guides'
     | '/uk'
     | '/camera/$cameraId'
+    | '/uk/guides/$slug'
+    | '/uk/guides'
   id:
     | '__root__'
     | '/'
@@ -267,11 +311,15 @@ export interface FileRouteTypes {
     | '/_app/cameras'
     | '/_app/home'
     | '/_app/profile'
+    | '/guides/$slug'
     | '/uk/contact'
     | '/uk/faq'
     | '/uk/how-it-works'
+    | '/guides/'
     | '/uk/'
     | '/_app/camera/$cameraId'
+    | '/uk/guides/$slug'
+    | '/uk/guides/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -286,10 +334,14 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
+  GuidesSlugRoute: typeof GuidesSlugRoute
   UkContactRoute: typeof UkContactRoute
   UkFaqRoute: typeof UkFaqRoute
   UkHowItWorksRoute: typeof UkHowItWorksRoute
+  GuidesIndexRoute: typeof GuidesIndexRoute
   UkIndexRoute: typeof UkIndexRoute
+  UkGuidesSlugRoute: typeof UkGuidesSlugRoute
+  UkGuidesIndexRoute: typeof UkGuidesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -406,6 +458,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileRouteImport
       parentRoute: typeof AppRoute
     }
+    '/guides/': {
+      id: '/guides/'
+      path: '/guides'
+      fullPath: '/guides/'
+      preLoaderRoute: typeof GuidesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/$slug': {
+      id: '/guides/$slug'
+      path: '/guides/$slug'
+      fullPath: '/guides/$slug'
+      preLoaderRoute: typeof GuidesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/uk/': {
       id: '/uk/'
       path: '/uk'
@@ -440,6 +506,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/camera/$cameraId'
       preLoaderRoute: typeof AppCameraCameraIdRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/uk/guides/': {
+      id: '/uk/guides/'
+      path: '/uk/guides'
+      fullPath: '/uk/guides/'
+      preLoaderRoute: typeof UkGuidesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/uk/guides/$slug': {
+      id: '/uk/guides/$slug'
+      path: '/uk/guides/$slug'
+      fullPath: '/uk/guides/$slug'
+      preLoaderRoute: typeof UkGuidesSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -476,10 +556,14 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
+  GuidesSlugRoute: GuidesSlugRoute,
   UkContactRoute: UkContactRoute,
   UkFaqRoute: UkFaqRoute,
   UkHowItWorksRoute: UkHowItWorksRoute,
+  GuidesIndexRoute: GuidesIndexRoute,
   UkIndexRoute: UkIndexRoute,
+  UkGuidesSlugRoute: UkGuidesSlugRoute,
+  UkGuidesIndexRoute: UkGuidesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -10,12 +10,15 @@
   "nav_contact": "Contact",
   "nav_signin": "Sign in",
   "nav_pricing": "Pricing",
+  "nav_guides": "Guides",
   "nav_lang": "Українська",
 
   "meta_home_title": "oko — cloud recording for the cameras you already own",
   "meta_home_desc": "Connect existing RTSP/ONVIF cameras to the cloud in one command. Seven days of archive that survives whatever happens to the hardware on site. No port forwarding, no static IP.",
   "meta_how_title": "How oko works — camera, bridge, cloud",
   "meta_how_desc": "A small bridge program on any mini-PC finds your cameras, pushes the stream out to the cloud and keeps a rolling archive. Nothing is exposed to the internet.",
+  "meta_guides_title": "Camera connection guides — oko",
+  "meta_guides_desc": "How to enable ONVIF and RTSP on V380 Pro, TP-Link Tapo, Hikvision, Dahua and Reolink cameras and connect them to the oko cloud archive.",
   "meta_faq_title": "oko — frequently asked questions",
   "meta_faq_desc": "Which cameras are supported, how long footage is kept, who can see it, what happens when the internet drops, and what hardware the bridge needs.",
   "meta_contact_title": "oko — contact us",
@@ -105,6 +108,8 @@
   "faq_a7": "One bridge covers every camera on its network. Practically the ceiling is the upload bandwidth of that site, not the software.",
   "faq_q8": "What does it cost?",
   "faq_a8": "The Free tier is permanent: seven days of rolling archive for up to two cameras, full resolution. Paid tiers are coming — Start at $2.49 per camera per month keeps the same 7 days with no camera limit, Plus at $4.99 keeps 30 days. Until billing launches, everything is free.",
+
+  "faq_guides_hint": "Step-by-step setup for V380 Pro, Tapo, Hikvision, Dahua and Reolink:",
 
   "contact_title": "Contact",
   "contact_intro": "Questions about connecting your cameras, or about working together as an installer — write to us. A person answers, usually within a day.",

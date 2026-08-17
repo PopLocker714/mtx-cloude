@@ -22,7 +22,7 @@ export const SITE_URL: string = (
 
 // Страницы сайта в одном месте: отсюда берутся и меню, и hreflang, и sitemap,
 // поэтому забыть страницу в карте сайта, добавив её в меню, невозможно.
-export const PAGES = ["", "how-it-works", "faq", "contact"] as const;
+export const PAGES = ["", "how-it-works", "guides", "faq", "contact"] as const;
 export type Page = (typeof PAGES)[number];
 
 /** Путь страницы в нужной локали: ("faq","uk") → "/uk/faq", ("","en") → "/" */

@@ -27,6 +27,7 @@ function Brand({ locale }: { locale: Locale }) {
 function NavLinks({ locale, onNavigate }: { locale: Locale; onNavigate?: () => void }) {
   const items = [
     { to: pagePath("how-it-works", locale), label: m.nav_how({}, { locale }) },
+    { to: pagePath("guides", locale), label: m.nav_guides({}, { locale }) },
     { to: pagePath("faq", locale), label: m.nav_faq({}, { locale }) },
     { to: pagePath("contact", locale), label: m.nav_contact({}, { locale }) },
   ];

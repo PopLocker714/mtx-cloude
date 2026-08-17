@@ -235,6 +235,12 @@ export function FaqPage({ locale }: { locale: Locale }) {
             </div>
           ))}
         </dl>
+        <p className="mt-6 text-sm text-muted-foreground">
+          {m.faq_guides_hint({}, { locale })}{" "}
+          <Link to={pagePath("guides", locale)} className="font-medium text-primary underline-offset-4 hover:underline">
+            {m.nav_guides({}, { locale })} →
+          </Link>
+        </p>
       </Prose>
       <CtaBand locale={locale} />
     </MarketingShell>

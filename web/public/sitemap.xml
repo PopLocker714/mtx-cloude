@@ -34,6 +34,22 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://app.tunnel.poploker.ru/guides</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/guides"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/guides"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/guides"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/uk/guides</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/guides"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/guides"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/guides"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://app.tunnel.poploker.ru/faq</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/faq"/>
     <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/faq"/>
@@ -64,5 +80,85 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/contact"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/guides/v380-pro</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/guides/v380-pro"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/guides/v380-pro"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/guides/v380-pro"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/uk/guides/v380-pro</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/guides/v380-pro"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/guides/v380-pro"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/guides/v380-pro"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/guides/tp-link-tapo</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/guides/tp-link-tapo"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/guides/tp-link-tapo"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/guides/tp-link-tapo"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/uk/guides/tp-link-tapo</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/guides/tp-link-tapo"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/guides/tp-link-tapo"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/guides/tp-link-tapo"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/guides/hikvision</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/guides/hikvision"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/guides/hikvision"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/guides/hikvision"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/uk/guides/hikvision</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/guides/hikvision"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/guides/hikvision"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/guides/hikvision"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/guides/dahua</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/guides/dahua"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/guides/dahua"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/guides/dahua"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/uk/guides/dahua</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/guides/dahua"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/guides/dahua"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/guides/dahua"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/guides/reolink</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/guides/reolink"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/guides/reolink"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/guides/reolink"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://app.tunnel.poploker.ru/uk/guides/reolink</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://app.tunnel.poploker.ru/guides/reolink"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://app.tunnel.poploker.ru/uk/guides/reolink"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://app.tunnel.poploker.ru/guides/reolink"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
 </urlset>
