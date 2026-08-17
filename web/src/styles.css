@@ -182,6 +182,54 @@
   }
 }
 
+/* ——— Переходы между страницами (View Transitions API) ———
+ *
+ * Роутер оборачивает навигацию в document.startViewTransition
+ * (router.tsx → defaultViewTransition), браузер снимает «до» и «после»
+ * и кроссфейдит их. Здесь мы только задаём характер: уходящий экран
+ * растворяется чуть быстрее, приходящий выезжает на несколько пикселей —
+ * этого хватает, чтобы переход читался как движение, а не как мигание.
+ *
+ * Шапка и сайдбар исключены из анимации через view-transition-name ниже:
+ * иначе они «прыгают» вместе с контентом на каждом переходе.
+ */
+::view-transition-old(root) {
+  animation: vt-out 0.18s ease-in both;
+}
+::view-transition-new(root) {
+  animation: vt-in 0.28s cubic-bezier(0.2, 0, 0, 1) both;
+}
+@keyframes vt-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Постоянные элементы каркаса: собственное имя = браузер морфит элемент
+ * сам в себя между состояниями вместо кроссфейда всей страницы.
+ * Имена РАЗНЫЕ намеренно: с общим именем переход «сайт → кабинет» пытался бы
+ * превратить верхнюю шапку в боковое меню. Одно имя = один элемент на экране,
+ * дубликат ломает переход целиком. */
+.marketing > header {
+  view-transition-name: oko-topbar;
+}
+[data-slot="sidebar-container"] {
+  view-transition-name: oko-sidebar;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
 /* Логотип «глаз-облако»: моргает (веко = сплющивание глаза) и
  * осматривается, как поворотная камера. Глобально — живёт и в ЛК. */
 .logo-eye {
