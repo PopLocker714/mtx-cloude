@@ -1,7 +1,7 @@
 ---
 principal_stated_goal: "Адаптировать сайт: разработать посадочную страницу для клиентов в двух языках (украинский и английский, русского не нужно). Изучить конкурентов — их сайты, тарифы, примерные цены; нам желательно цены как можно меньше. Обязательно отметить щедрый лимит: 7 дней видео бесплатно. Дизайн сейчас пустой — поработать над дизайном, посмотреть дизайны конкурентов под нашу тематику, придумать интересный."
 phase: complete
-progress: 13/13
+progress: 14/14
 slug: oko-landing
 ---
 
@@ -36,6 +36,8 @@ slug: oko-landing
 - [x] C12. Анимированный логотип oko-cloud: глаз в облаке, моргает (logo-blink 7s) и осматривается (logo-look 11s), в шапке сайта и sidebar ЛК, prefers-reduced-motion отключает. Evidence: getAnimations → logo-blink+logo-look; zoom-скриншот шапки (облако #adf2c6, ирис, зрачок, блик).
 
 - [x] C13. Внешний вид «прям как у Google» (фидбек Ильи, итерация 4): карточки tonal filled без рамок (ui/card rounded-3xl, лендинг rounded-[28px]), кнопки M3-габаритов pill глобально (ui/button h-10/h-12), чёрные плашки заменены tonal-панелями rounded-[32px], бренды — outlined-чипы, заголовки Fixel Display Medium. Evidence: скриншоты light+dark после правок — ни одной bordered-карточки, ни одного чёрного бэнда; build ✓.
+
+- [x] C14. Плавный скролл к якорям: клик «Тарифи» едет к #pricing анимированно, с отступом под sticky-шапку, reduced-motion отключает. Evidence: computed scroll-behavior:smooth + scroll-padding-top 80px; живой клик → hash #pricing, scrollY 2148.
 
 ## Anti-claims
 
