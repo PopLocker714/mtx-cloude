@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { KeyRound } from "lucide-react";
 import { m } from "@/paraglide/messages";
 import { useAppLocale } from "@/lib/app-locale";
 import { stubSendCode } from "@/lib/api";
+import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export const Route = createFileRoute("/forgot-password")({ component: ForgotPassword });
 
@@ -31,29 +32,51 @@ function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>{m.fp_title({}, { locale })}</CardTitle>
-          <CardDescription>{m.fp_desc({}, { locale })}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={submit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">{m.login_email({}, { locale })}</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "…" : m.fp_send({}, { locale })}
-            </Button>
-          </form>
-          <p className="mt-4 text-xs text-muted-foreground text-center">{m.fp_stub({}, { locale })}</p>
-          <p className="mt-2 text-sm text-center">
-            <Link to="/login" className="underline">{m.fp_back({}, { locale })}</Link>
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+    <AuthShell
+      title={m.fp_title({}, { locale })}
+      subtitle={m.fp_desc({}, { locale })}
+      footer={
+        <Link to="/login" className="hover:text-foreground">
+          {m.fp_back({}, { locale })}
+        </Link>
+      }
+    >
+      <div className="space-y-6">
+        <div className="flex size-12 items-center justify-center rounded-full bg-accent text-accent-foreground">
+          <KeyRound className="size-6" />
+        </div>
+
+        <form onSubmit={submit} className="space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="email">{m.login_email({}, { locale })}</Label>
+            <Input
+              id="email"
+              type="email"
+              required
+              autoFocus
+              autoComplete="email"
+              placeholder={m.login_email_ph({}, { locale })}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <Button type="submit" size="lg" className="w-full" disabled={loading}>
+            {loading ? "…" : m.fp_send({}, { locale })}
+          </Button>
+        </form>
+
+        <p className="text-sm text-muted-foreground">
+          {m.fp_have_code({}, { locale })}{" "}
+          <Link to="/reset-password" search={{ email }} className="font-medium text-primary hover:underline">
+            {m.fp_enter_code({}, { locale })}
+          </Link>
+        </p>
+
+        <p className="rounded-2xl bg-muted p-4 text-xs leading-relaxed text-muted-foreground">
+          {m.fp_stub({}, { locale })}
+        </p>
+      </div>
+    </AuthShell>
   );
 }

@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { MailCheck } from "lucide-react";
 import { m } from "@/paraglide/messages";
 import { useAppLocale } from "@/lib/app-locale";
 import { stubSendCode, stubVerifyEmail } from "@/lib/api";
+import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 export const Route = createFileRoute("/verify-email")({
@@ -18,11 +19,11 @@ function VerifyEmail() {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [resent, setResent] = useState(false);
 
-  // «Отправляем» код при заходе (стаб — реально не уходит).
+  // Код выдаётся при заходе на страницу (доставка — лог бэкенда, пока нет писем).
   useEffect(() => {
-    if (email) stubSendCode(email).then(() => setSent(true)).catch(() => {});
+    if (email) stubSendCode(email, "verify-email").catch(() => {});
   }, [email]);
 
   async function submit(e: React.FormEvent) {
@@ -38,33 +39,57 @@ function VerifyEmail() {
     }
   }
 
+  async function resend() {
+    setError(null);
+    setCode("");
+    await stubSendCode(email, "verify-email").catch(() => {});
+    setResent(true);
+    setTimeout(() => setResent(false), 3000);
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>{m.ve_title({}, { locale })}</CardTitle>
-          <CardDescription>
-            {email ? m.ve_desc_sent({ email }, { locale }) : m.ve_desc({}, { locale })}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={submit} className="space-y-4 flex flex-col items-center">
-            <InputOTP maxLength={6} value={code} onChange={setCode}>
-              <InputOTPGroup>
-                {[0, 1, 2, 3, 4, 5].map((i) => <InputOTPSlot key={i} index={i} />)}
-              </InputOTPGroup>
-            </InputOTP>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading || code.length < 6}>
-              {loading ? "…" : m.ve_submit({}, { locale })}
-            </Button>
-          </form>
-          <p className="mt-4 text-xs text-muted-foreground text-center">{m.fp_stub({}, { locale })}</p>
-          <p className="mt-2 text-sm text-center">
-            <Link to="/login" className="underline">{m.fp_back({}, { locale })}</Link>
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+    <AuthShell
+      title={m.ve_title({}, { locale })}
+      subtitle={email ? m.ve_desc_sent({ email }, { locale }) : m.ve_desc({}, { locale })}
+      footer={
+        <Link to="/login" className="hover:text-foreground">
+          {m.fp_back({}, { locale })}
+        </Link>
+      }
+    >
+      <div className="space-y-6">
+        <div className="flex size-12 items-center justify-center rounded-full bg-accent text-accent-foreground">
+          <MailCheck className="size-6" />
+        </div>
+
+        <form onSubmit={submit} className="space-y-5">
+          <InputOTP maxLength={6} value={code} onChange={setCode} autoFocus>
+            <InputOTPGroup>
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <InputOTPSlot key={i} index={i} className="size-12 text-lg" />
+              ))}
+            </InputOTPGroup>
+          </InputOTP>
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
+
+          <Button type="submit" size="lg" className="w-full" disabled={loading || code.length < 6}>
+            {loading ? "…" : m.ve_submit({}, { locale })}
+          </Button>
+        </form>
+
+        <button
+          type="button"
+          onClick={resend}
+          className="whitespace-nowrap text-sm text-muted-foreground hover:text-foreground"
+        >
+          {resent ? m.ve_resent({}, { locale }) : m.ve_resend({}, { locale })}
+        </button>
+
+        <p className="rounded-2xl bg-muted p-4 text-xs leading-relaxed text-muted-foreground">
+          {m.fp_stub({}, { locale })}
+        </p>
+      </div>
+    </AuthShell>
   );
 }

@@ -15,7 +15,25 @@ if (!secret || secret.length < 32) {
 // на общих tunnel-доменах (Public Suffix List) браузер отвергает. Так что crossSubDomainCookies НЕ используем.
 const isProd = process.env.NODE_ENV === "production";
 
+// Соцвходы включаются НАЛИЧИЕМ ключей, а не отдельным флагом: нет ключей —
+// провайдер не регистрируется, и фронт (через GET /api/auth-providers) просто
+// не рисует кнопку. Добавить второго провайдера = добавить сюда блок и запись
+// в PROVIDER_ENV ниже; UI подхватит его сам.
+const socialProviders: Record<string, { clientId: string; clientSecret: string }> = {};
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  socialProviders.google = {
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  };
+}
+
+/** Провайдеры, настроенные на этом сервере — для UI входа. */
+export function enabledSocialProviders(): string[] {
+  return Object.keys(socialProviders);
+}
+
 export const auth = betterAuth({
+  socialProviders,
   baseURL: process.env.BASE_URL || "http://localhost:9998",
   secret,
   trustedOrigins: (process.env.TRUSTED_ORIGINS || "http://localhost:9998,http://localhost:5173").split(","),

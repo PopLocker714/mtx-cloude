@@ -354,5 +354,19 @@
   "rp_submit": "Change password",
   "tt_light": "Light theme",
   "tt_dark": "Dark theme",
-  "cam_default_name": "Camera"
+  "cam_default_name": "Camera",
+  "auth_or": "or",
+  "auth_continue_with": "Continue with {provider}",
+  "auth_panel_title": "Footage that outlives your hardware",
+  "auth_point_1": "Seven days of cloud archive free for every camera — no trial period.",
+  "auth_point_2": "Nothing is exposed to the internet: no port forwarding, no static IP.",
+  "auth_point_3": "Works with the cameras you already own — RTSP or ONVIF.",
+  "auth_back_site": "← Back to site",
+  "login_subtitle_signin": "Sign in to see your cameras and archive.",
+  "login_subtitle_signup": "A few minutes and your cameras record to the cloud.",
+  "login_email_ph": "you@example.com",
+  "ve_resend": "Send the code again",
+  "ve_resent": "Code sent again",
+  "fp_have_code": "Already have a code?",
+  "fp_enter_code": "Enter the code"
 }

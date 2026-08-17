@@ -354,5 +354,19 @@
   "rp_submit": "Змінити пароль",
   "tt_light": "Світла тема",
   "tt_dark": "Темна тема",
-  "cam_default_name": "Камера"
+  "cam_default_name": "Камера",
+  "auth_or": "або",
+  "auth_continue_with": "Продовжити з {provider}",
+  "auth_panel_title": "Запис, який переживе ваше обладнання",
+  "auth_point_1": "Сім діб хмарного архіву безкоштовно для кожної камери — без пробних періодів.",
+  "auth_point_2": "Назовні нічого не відкрито: ні прокидання портів, ні білого IP.",
+  "auth_point_3": "Працює з камерами, які у вас уже є — RTSP або ONVIF.",
+  "auth_back_site": "← На сайт",
+  "login_subtitle_signin": "Увійдіть, щоб побачити свої камери та архів.",
+  "login_subtitle_signup": "Кілька хвилин — і ваші камери пишуть у хмару.",
+  "login_email_ph": "you@example.com",
+  "ve_resend": "Надіслати код ще раз",
+  "ve_resent": "Код надіслано ще раз",
+  "fp_have_code": "Код уже є?",
+  "fp_enter_code": "Ввести код"
 }

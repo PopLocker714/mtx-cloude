@@ -32,6 +32,9 @@ services:
       ADMIN_EMAIL: "${ADMIN_EMAIL}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
       STUB_AUTH: "${STUB_AUTH}"
+      # Соцвход Google: пустые значения = провайдер выключен, кнопка не рисуется.
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
+      GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET}"
       NODE_ENV: "production"
       # Этап 3 — умная запись по движению: backend гейтит запись через Control API MediaMTX.
       MTX_API_URL: "http://mediamtx:9997"

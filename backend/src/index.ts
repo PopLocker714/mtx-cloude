@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { auth } from "./auth";
+import { auth, enabledSocialProviders } from "./auth";
 import { ensureAdmin, ensureBridgeKey } from "./bootstrap";
 import { purgeExpiredOtp } from "./otp";
 import { mediamtxAuth } from "./routes/mediamtx-auth";
@@ -41,6 +41,10 @@ app.onError((err, c) => {
 });
 
 app.get("/health", (c) => c.json({ ok: true, service: "oko-cloud-backend" }));
+
+// Какие соцвходы настроены на этом сервере — страница входа рисует ровно их.
+// Публичный и безопасный ответ: только имена, без ключей.
+app.get("/api/auth-providers", (c) => c.json({ providers: enabledSocialProviders() }));
 
 // Публичный установщик bridge одной командой: curl -fsSL <api>/install.sh | OKO_PAIR_CODE=… sh
 app.route("/install.sh", install);

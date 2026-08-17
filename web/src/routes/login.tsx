@@ -3,11 +3,12 @@ import { useState } from "react";
 import { m } from "@/paraglide/messages";
 import { useAppLocale } from "@/lib/app-locale";
 import { signIn, signUp } from "@/lib/auth-client";
+import { AuthShell } from "@/components/auth/auth-shell";
+import { SocialAuthButtons } from "@/components/auth/social-buttons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export const Route = createFileRoute("/login")({ component: LoginPage });
 
@@ -43,59 +44,98 @@ function LoginPage() {
       mode === "signup" ? `/verify-email?email=${encodeURIComponent(email)}` : "/home";
   }
 
+  const signup = mode === "signup";
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>{mode === "signin" ? m.login_title({}, { locale }) : m.login_signup_title({}, { locale })}</CardTitle>
-          <CardDescription>{m.login_subtitle({}, { locale })}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={submit} className="space-y-4">
-            {mode === "signup" && (
-              <div className="space-y-2">
-                <Label htmlFor="name">{m.login_name({}, { locale })}</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
-              </div>
-            )}
+    <AuthShell
+      title={signup ? m.login_signup_title({}, { locale }) : m.login_title({}, { locale })}
+      subtitle={signup ? m.login_subtitle_signup({}, { locale }) : m.login_subtitle_signin({}, { locale })}
+      footer={
+        <Link to="/" className="hover:text-foreground">
+          {m.auth_back_site({}, { locale })}
+        </Link>
+      }
+    >
+      <div className="space-y-6">
+        <SocialAuthButtons />
+
+        <form onSubmit={submit} className="space-y-4">
+          {signup && (
             <div className="space-y-2">
-              <Label htmlFor="email">{m.login_email({}, { locale })}</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Label htmlFor="name">{m.login_name({}, { locale })}</Label>
+              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">{m.login_password({}, { locale })}</Label>
-              <Input id="password" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
-            </div>
-            {mode === "signup" && (
-              <label className="flex items-start gap-2 text-xs text-muted-foreground">
-                <Checkbox checked={accepted} onCheckedChange={(v) => setAccepted(v === true)} className="mt-0.5" />
-                <span>
-                  {m.login_accept_prefix({}, { locale })}{" "}
-                  <Link to="/terms" target="_blank" className="underline">{m.login_terms({}, { locale })}</Link>{" "}
-                  {m.login_accept_and({}, { locale })}{" "}
-                  <Link to="/privacy" target="_blank" className="underline">{m.login_privacy({}, { locale })}</Link>.
-                </span>
-              </label>
-            )}
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading || (mode === "signup" && !accepted)}>
-              {loading ? "…" : mode === "signin" ? m.login_submit({}, { locale }) : m.login_signup_submit({}, { locale })}
-            </Button>
-          </form>
-          {mode === "signin" && (
-            <p className="mt-3 text-center">
-              <Link to="/forgot-password" className="text-sm text-muted-foreground underline">{m.login_forgot({}, { locale })}</Link>
-            </p>
           )}
-          <button
-            type="button"
-            className="mt-4 text-sm text-muted-foreground underline w-full text-center"
-            onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-          >
-            {mode === "signin" ? m.login_no_account({}, { locale }) : m.login_have_account({}, { locale })}
-          </button>
-        </CardContent>
-      </Card>
-    </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">{m.login_email({}, { locale })}</Label>
+            <Input
+              id="email"
+              type="email"
+              required
+              autoComplete="email"
+              placeholder={m.login_email_ph({}, { locale })}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <Label htmlFor="password">{m.login_password({}, { locale })}</Label>
+              {!signup && (
+                <Link
+                  to="/forgot-password"
+                  className="shrink-0 whitespace-nowrap text-xs text-muted-foreground hover:text-foreground"
+                >
+                  {m.login_forgot({}, { locale })}
+                </Link>
+              )}
+            </div>
+            <Input
+              id="password"
+              type="password"
+              required
+              minLength={8}
+              autoComplete={signup ? "new-password" : "current-password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+
+          {signup && (
+            <label className="flex items-start gap-2 text-xs text-muted-foreground">
+              <Checkbox checked={accepted} onCheckedChange={(v) => setAccepted(v === true)} className="mt-0.5" />
+              <span>
+                {m.login_accept_prefix({}, { locale })}{" "}
+                <Link to="/terms" target="_blank" className="underline">
+                  {m.login_terms({}, { locale })}
+                </Link>{" "}
+                {m.login_accept_and({}, { locale })}{" "}
+                <Link to="/privacy" target="_blank" className="underline">
+                  {m.login_privacy({}, { locale })}
+                </Link>
+                .
+              </span>
+            </label>
+          )}
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
+
+          <Button type="submit" size="lg" className="w-full" disabled={loading || (signup && !accepted)}>
+            {loading ? "…" : signup ? m.login_signup_submit({}, { locale }) : m.login_submit({}, { locale })}
+          </Button>
+        </form>
+
+        <button
+          type="button"
+          className="w-full text-center text-sm text-muted-foreground hover:text-foreground"
+          onClick={() => {
+            setMode(signup ? "signin" : "signup");
+            setError(null);
+          }}
+        >
+          {signup ? m.login_have_account({}, { locale }) : m.login_no_account({}, { locale })}
+        </button>
+      </div>
+    </AuthShell>
   );
 }
