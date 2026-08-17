@@ -23,6 +23,7 @@ import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppBridgesRouteImport } from './routes/_app/bridges'
 import { Route as AppCamerasRouteImport } from './routes/_app/cameras'
+import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as UkIndexRouteImport } from './routes/uk/index'
 import { Route as UkContactRouteImport } from './routes/uk/contact'
@@ -99,6 +100,11 @@ const AppCamerasRoute = AppCamerasRouteImport.update({
   path: '/cameras',
   getParentRoute: () => AppRoute,
 } as any)
+const AppHomeRoute = AppHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AppAdminRoute
   '/bridges': typeof AppBridgesRoute
   '/cameras': typeof AppCamerasRoute
+  '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
   '/uk/contact': typeof UkContactRoute
   '/uk/faq': typeof UkFaqRoute
@@ -165,6 +172,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AppAdminRoute
   '/bridges': typeof AppBridgesRoute
   '/cameras': typeof AppCamerasRoute
+  '/home': typeof AppHomeRoute
   '/profile': typeof AppProfileRoute
   '/uk/contact': typeof UkContactRoute
   '/uk/faq': typeof UkFaqRoute
@@ -188,6 +196,7 @@ export interface FileRoutesById {
   '/_app/admin': typeof AppAdminRoute
   '/_app/bridges': typeof AppBridgesRoute
   '/_app/cameras': typeof AppCamerasRoute
+  '/_app/home': typeof AppHomeRoute
   '/_app/profile': typeof AppProfileRoute
   '/uk/contact': typeof UkContactRoute
   '/uk/faq': typeof UkFaqRoute
@@ -211,6 +220,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bridges'
     | '/cameras'
+    | '/home'
     | '/profile'
     | '/uk/contact'
     | '/uk/faq'
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bridges'
     | '/cameras'
+    | '/home'
     | '/profile'
     | '/uk/contact'
     | '/uk/faq'
@@ -254,6 +265,7 @@ export interface FileRouteTypes {
     | '/_app/admin'
     | '/_app/bridges'
     | '/_app/cameras'
+    | '/_app/home'
     | '/_app/profile'
     | '/uk/contact'
     | '/uk/faq'
@@ -380,6 +392,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCamerasRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/home': {
+      id: '/_app/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AppHomeRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/profile': {
       id: '/_app/profile'
       path: '/profile'
@@ -429,6 +448,7 @@ interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppBridgesRoute: typeof AppBridgesRoute
   AppCamerasRoute: typeof AppCamerasRoute
+  AppHomeRoute: typeof AppHomeRoute
   AppProfileRoute: typeof AppProfileRoute
   AppCameraCameraIdRoute: typeof AppCameraCameraIdRoute
 }
@@ -437,6 +457,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
   AppBridgesRoute: AppBridgesRoute,
   AppCamerasRoute: AppCamerasRoute,
+  AppHomeRoute: AppHomeRoute,
   AppProfileRoute: AppProfileRoute,
   AppCameraCameraIdRoute: AppCameraCameraIdRoute,
 }

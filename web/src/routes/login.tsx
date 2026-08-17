@@ -37,7 +37,7 @@ function LoginPage() {
     // Регистрация → шаг подтверждения почты (заготовка флоу); вход → сразу в кабинет.
     // Полная навигация (не SPA): свежий заход с уже установленной кукой, без гонки кэша useSession.
     window.location.href =
-      mode === "signup" ? `/verify-email?email=${encodeURIComponent(email)}` : "/cameras";
+      mode === "signup" ? `/verify-email?email=${encodeURIComponent(email)}` : "/home";
   }
 
   return (

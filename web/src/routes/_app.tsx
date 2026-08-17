@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, useNavigate, Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
-import { Video, LogOut, Shield, User, Server } from "lucide-react";
+import { Video, LogOut, Shield, User, Server, House } from "lucide-react";
 import { useSession, signOut } from "@/lib/auth-client";
 import { applySeedToElement, clearSeedFromElement, loadSeed } from "@/lib/m3-theme";
 import { Logo } from "@/components/Logo";
@@ -77,6 +77,13 @@ function AppLayout() {
         </SidebarHeader>
         <SidebarContent className="px-3">
           <SidebarMenu className="gap-1.5">
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith("/home")}>
+                <Link to="/home">
+                  <House /> <span>Главная</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={pathname.startsWith("/cameras") || pathname.startsWith("/camera/")}>
                 <Link to="/cameras">
