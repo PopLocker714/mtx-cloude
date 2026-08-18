@@ -64,16 +64,16 @@ export function MarketingShell({ locale, children }: { locale: Locale; children:
   return (
     <div className="marketing flex min-h-svh flex-col">
       <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4">
+        <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:gap-6">
           <Link to={pagePath("", locale)}>
             <Brand locale={locale} />
           </Link>
 
-          <nav className="hidden items-center gap-6 md:flex">
+          <nav className="hidden items-center gap-6 lg:flex">
             <NavLinks locale={locale} />
           </nav>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-2">
             {/* Переключатель ведёт на ТОТ ЖЕ путь в другой локали, а не на главную:
                 увести читателя с середины FAQ на титульную — потерять его. */}
             {/* Трёхъязычный переключатель: тот же путь в целевой локали. */}
@@ -100,7 +100,7 @@ export function MarketingShell({ locale, children }: { locale: Locale; children:
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
-              className="md:hidden"
+              className="lg:hidden"
               aria-label="Menu"
               aria-expanded={open}
             >
@@ -110,7 +110,7 @@ export function MarketingShell({ locale, children }: { locale: Locale; children:
         </div>
 
         {open && (
-          <nav className="flex flex-col gap-3 border-t px-4 py-4 md:hidden">
+          <nav className="flex flex-col gap-3 border-t px-4 py-4 lg:hidden">
             <NavLinks locale={locale} onNavigate={() => setOpen(false)} />
             <Link to="/login" className="text-sm" onClick={() => setOpen(false)}>
               {m.nav_signin({}, { locale })}

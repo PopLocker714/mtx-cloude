@@ -16,14 +16,22 @@ if (!secret || secret.length < 32) {
 const isProd = process.env.NODE_ENV === "production";
 
 // Соцвходы включаются НАЛИЧИЕМ ключей, а не отдельным флагом: нет ключей —
-// провайдер не регистрируется, и фронт (через GET /api/auth-providers) просто
-// не рисует кнопку. Добавить второго провайдера = добавить сюда блок и запись
-// в PROVIDER_ENV ниже; UI подхватит его сам.
+// провайдер не регистрируется, и фронт (через GET /api/auth-providers) рисует
+// кнопку неактивной. Добавить провайдера = добавить сюда блок; UI подхватит сам.
+//
+// Telegram сознательно НЕ здесь: у него не OAuth, а Login Widget (bot token +
+// /setdomain), поэтому он появится отдельным маршрутом, а не записью better-auth.
 const socialProviders: Record<string, { clientId: string; clientSecret: string }> = {};
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   socialProviders.google = {
     clientId: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  };
+}
+if (process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET) {
+  socialProviders.apple = {
+    clientId: process.env.APPLE_CLIENT_ID,
+    clientSecret: process.env.APPLE_CLIENT_SECRET,
   };
 }
 

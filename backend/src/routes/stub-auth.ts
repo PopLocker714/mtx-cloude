@@ -3,21 +3,24 @@ import { eq, and } from "drizzle-orm";
 import { db, schema } from "../db";
 import { auth } from "../auth";
 import { issueOtp, consumeOtp, type OtpPurpose } from "../otp";
+import { emailEnabled } from "../email";
 
 // Флоу подтверждения email и сброса пароля по одноразовому коду.
 //
-// Коды НАСТОЯЩИЕ (otp.ts: CSPRNG, TTL 15 мин, одноразовые, лимит попыток) —
-// стаб только в доставке: письма пока не отправляются, код печатается в лог
-// бэкенда. Подключение Unisender Go = заменить sendEmail, проверку не трогать.
+// Коды НАСТОЯЩИЕ (otp.ts: CSPRNG, TTL 15 мин, одноразовые, лимит попыток).
+// Доставка зависит от Resend: есть RESEND_API_KEY — код уходит письмом, нет —
+// печатается в лог бэкенда (docker compose logs -f backend).
 //
-// Сброс пароля дополнительно закрыт флагом STUB_AUTH и никогда не работает
-// в production: пока код виден в логах, любой, у кого есть доступ к логам,
-// смог бы сменить чужой пароль.
+// Сброс пароля работает, когда код действительно уходит письмом. Пока доставки
+// нет, он открывается только флагом STUB_AUTH вне production: код виден в логах,
+// и любой, у кого есть доступ к логам, иначе сменил бы чужой пароль.
 export const stubAuth = new Hono();
 
 // Жёсткая защита (H2): демо-сброс пароля НИКОГДА не работает в проде, даже если STUB_AUTH=1
-// случайно оставили включённым после демонстрации. В проде — только реальный флоу (Unisender Go).
+// случайно оставили включённым после демонстрации. В проде путь один — настоящее письмо.
 const STUB_ENABLED = process.env.STUB_AUTH === "1" && process.env.NODE_ENV !== "production";
+/** Сброс пароля разрешён, когда код уходит письмом, либо в демо-режиме вне прода. */
+const resetAllowed = () => emailEnabled() || STUB_ENABLED;
 if (process.env.STUB_AUTH === "1" && process.env.NODE_ENV === "production") {
   console.warn("SECURITY: STUB_AUTH=1 проигнорирован в production — демо-сброс пароля отключён.");
 }
@@ -41,8 +44,8 @@ stubAuth.post("/send-code", async (c) => {
   const { email, purpose } = await c.req.json().catch(() => ({}));
   if (typeof email !== "string" || !EMAIL_RE.test(email)) return c.json({ error: "неверный email" }, 400);
   const p: OtpPurpose = purpose === "reset-password" ? "reset-password" : "verify-email";
-  await issueOtp(p, email);
-  return c.json({ ok: true, delivery: "log" });
+  const delivery = await issueOtp(p, email);
+  return c.json({ ok: true, delivery });
 });
 
 // Подтверждение email — код проверяется по-настоящему.
@@ -58,11 +61,11 @@ stubAuth.post("/verify-email", async (c) => {
   return c.json({ ok: true });
 });
 
-// Сброс пароля — код проверяется; доступно только вне прода при STUB_AUTH=1,
-// пока код доставляется логом, а не письмом.
+// Сброс пароля — код проверяется всегда; доступен при настроенной почте,
+// либо вне прода под STUB_AUTH=1, пока код доставляется логом.
 stubAuth.post("/reset-password", async (c) => {
-  if (!STUB_ENABLED) {
-    return c.json({ error: "Заготовка: сброс пароля будет через Unisender Go. Включается STUB_AUTH=1 для демо." }, 501);
+  if (!resetAllowed()) {
+    return c.json({ error: "Сброс пароля недоступен: почта не настроена (RESEND_API_KEY). Для демо вне прода — STUB_AUTH=1." }, 501);
   }
   const { email, code, newPassword } = await c.req.json().catch(() => ({}));
   if (typeof email !== "string" || !EMAIL_RE.test(email)) return c.json({ error: "неверный email" }, 400);

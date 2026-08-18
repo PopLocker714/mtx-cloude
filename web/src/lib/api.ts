@@ -111,11 +111,13 @@ export const adminListCameras = (): Promise<AdminCamera[]> => api("/admin/camera
 export const adminAudit = (): Promise<AuditEntry[]> => api("/admin/audit");
 
 // --- Подтверждение email / сброс пароля по одноразовому коду ---
-// Код настоящий (TTL 15 мин, одноразовый); стаб только в доставке — пока
-// писем нет, код печатается в лог бэкенда. purpose разводит два флоу,
-// чтобы код от одного не подошёл к другому.
+// Код настоящий (TTL 15 мин, одноразовый). delivery говорит, куда он ушёл:
+// "email" — письмом через Resend, "log" — почта не настроена и код в логе сервера,
+// "failed" — Resend отказал. purpose разводит два флоу, чтобы код от одного
+// не подошёл к другому.
+export type SendCodeResult = { ok: true; delivery: "email" | "log" | "failed" };
 export const stubSendCode = (email: string, purpose: "verify-email" | "reset-password" = "verify-email") =>
-  api("/stub/send-code", { method: "POST", body: JSON.stringify({ email, purpose }) });
+  api("/stub/send-code", { method: "POST", body: JSON.stringify({ email, purpose }) }) as Promise<SendCodeResult>;
 export const stubVerifyEmail = (email: string, code: string) =>
   api("/stub/verify-email", { method: "POST", body: JSON.stringify({ email, code }) });
 export const stubResetPassword = (email: string, code: string, newPassword: string) =>

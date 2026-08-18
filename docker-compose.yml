@@ -32,9 +32,14 @@ services:
       ADMIN_EMAIL: "${ADMIN_EMAIL}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
       STUB_AUTH: "${STUB_AUTH}"
-      # Соцвход Google: пустые значения = провайдер выключен, кнопка не рисуется.
+      # Почта (Resend): пусто = письма не уходят, код печатается в лог бэкенда.
+      RESEND_API_KEY: "${RESEND_API_KEY}"
+      RESEND_FROM: "${RESEND_FROM}"
+      # Соцвходы: пустые значения = провайдер выключен, кнопка рисуется неактивной.
       GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
       GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET}"
+      APPLE_CLIENT_ID: "${APPLE_CLIENT_ID}"
+      APPLE_CLIENT_SECRET: "${APPLE_CLIENT_SECRET}"
       NODE_ENV: "production"
       # Этап 3 — умная запись по движению: backend гейтит запись через Control API MediaMTX.
       MTX_API_URL: "http://mediamtx:9997"

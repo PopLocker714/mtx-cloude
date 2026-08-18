@@ -1,7 +1,7 @@
 import { randomInt, createHash, timingSafeEqual } from "node:crypto";
 import { and, eq, lt } from "drizzle-orm";
 import { db, schema } from "./db";
-import { sendOtp } from "./email";
+import { sendOtp, type Delivery } from "./email";
 
 // Одноразовые коды подтверждения (email verification, сброс пароля).
 //
@@ -31,7 +31,7 @@ function generateCode(): string {
  * Выдаёт новый код и «отправляет» его (сейчас — в лог).
  * Предыдущий код для той же пары purpose+email аннулируется.
  */
-export async function issueOtp(purpose: OtpPurpose, email: string): Promise<void> {
+export async function issueOtp(purpose: OtpPurpose, email: string): Promise<Delivery> {
   const identifier = identifierFor(purpose, email);
   const code = generateCode();
 
@@ -43,7 +43,7 @@ export async function issueOtp(purpose: OtpPurpose, email: string): Promise<void
     expiresAt: new Date(Date.now() + TTL_MS),
   });
 
-  await sendOtp(email, code, purpose);
+  return await sendOtp(email, code, purpose);
 }
 
 export type OtpCheck = { ok: true } | { ok: false; reason: "expired" | "invalid" | "too-many" };

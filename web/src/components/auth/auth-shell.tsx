@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ShieldCheck, HardDrive, Plug } from "lucide-react";
 import { m } from "@/paraglide/messages";
 import { useAppLocale } from "@/lib/app-locale";
-import { LOCALES, LOCALE_LABELS, type Locale } from "@/lib/i18n";
+import { LocaleSelect } from "@/components/locale-select";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { FeedCard } from "@/components/marketing/visuals";
@@ -10,24 +10,6 @@ import { FeedCard } from "@/components/marketing/visuals";
 // Каркас страниц входа/подтверждения: слева форма, справа брендовая панель
 // с живым кадром камеры и тремя доводами. На мобильных правая половина
 // скрыта — на телефоне важна форма, а не витрина.
-
-function LocalePicker() {
-  const [locale, setLocale] = useAppLocale();
-  return (
-    <select
-      value={locale}
-      onChange={(e) => setLocale(e.target.value as Locale)}
-      aria-label="Language"
-      className="rounded-full border bg-background px-2 py-1 text-xs font-medium"
-    >
-      {LOCALES.map((l) => (
-        <option key={l} value={l}>
-          {LOCALE_LABELS[l]}
-        </option>
-      ))}
-    </select>
-  );
-}
 
 export function AuthShell({
   title,
@@ -57,7 +39,7 @@ export function AuthShell({
             <span className="font-display text-xl font-bold tracking-tight">oko</span>
           </Link>
           <div className="flex items-center gap-2">
-            <LocalePicker />
+            <LocaleSelect />
             <ThemeToggle />
           </div>
         </header>

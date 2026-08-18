@@ -1,6 +1,9 @@
 import * as React from "react"
 
-const MOBILE_BREAKPOINT = 768
+// 1024, не 768: на планшетной ширине сайдбар (256px) плюс минимальная ширина
+// контента ЛК (~743px) не помещаются в экран, и main уезжал за правый край.
+// Значение обязано совпадать с lg: в components/ui/sidebar.tsx.
+const MOBILE_BREAKPOINT = 1024
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)

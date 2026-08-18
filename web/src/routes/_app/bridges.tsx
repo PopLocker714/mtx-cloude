@@ -85,11 +85,11 @@ function BridgesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="flex items-center gap-2 text-2xl font-semibold">
           <Server className="size-5" /> Bridge
         </h1>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex">
           <Button variant="outline" onClick={() => setClaimOpen(true)}>
             <Download className="size-4" /> {m.br_claim({}, { locale })}
           </Button>

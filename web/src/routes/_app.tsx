@@ -5,10 +5,10 @@ import { Video, LogOut, Shield, User, Server, House } from "lucide-react";
 import { m } from "@/paraglide/messages";
 import { useSession, signOut } from "@/lib/auth-client";
 import { useAppLocale } from "@/lib/app-locale";
-import { LOCALES, LOCALE_LABELS, type Locale } from "@/lib/i18n";
 import { applySeedToElement, clearSeedFromElement, loadSeed } from "@/lib/m3-theme";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LocaleSelect } from "@/components/locale-select";
 import {
   SidebarProvider,
   Sidebar,
@@ -57,7 +57,7 @@ function AppLayout() {
   const { data: session, isPending } = useSession();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [locale, setLocale] = useAppLocale();
+  const [locale] = useAppLocale();
 
   // Гард: не залогинен → на /login (клиентский, для v0 достаточно).
   useEffect(() => {
@@ -131,21 +131,12 @@ function AppLayout() {
       <SidebarInset>
         <header className="flex items-center gap-2 border-b px-4 h-14">
           <SidebarTrigger />
-          <span className="font-display font-semibold">{m.app_title({}, { locale })}</span>
-          <div className="ml-auto flex items-center gap-2">
-            {/* Язык кабинета — выбор пользователя, живёт в localStorage. */}
-            <select
-              value={locale}
-              onChange={(e) => setLocale(e.target.value as Locale)}
-              aria-label="Language"
-              className="rounded-full border bg-background px-2 py-1 text-xs font-medium"
-            >
-              {LOCALES.map((l) => (
-                <option key={l} value={l}>
-                  {LOCALE_LABELS[l]}
-                </option>
-              ))}
-            </select>
+          <span className="min-w-0 truncate font-display font-semibold">{m.app_title({}, { locale })}</span>
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            {/* Язык кабинета — выбор пользователя, живёт в localStorage.
+                Остаётся нативным select (на телефоне это родной пикер), но
+                системная стрелка убрана: рядом стоят M3-элементы. */}
+            <LocaleSelect />
             <ThemeToggle />
           </div>
         </header>

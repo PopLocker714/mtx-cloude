@@ -76,13 +76,13 @@ function GetStarted({ bridges, locale }: { bridges: Bridge[]; locale: Locale }) 
       action: (
         <div className="space-y-2">
           <div className="flex items-start gap-2 rounded-xl bg-feed p-4 text-feed-foreground">
-            <pre className="overflow-x-auto font-ticker text-xs leading-relaxed">{installCmd}</pre>
+            <pre className="overflow-x-auto font-ticker text-xs leading-relaxed break-all whitespace-pre-wrap sm:whitespace-pre">{installCmd}</pre>
             <CopyButton text={installCmd} label={copyLabel} />
           </div>
           <details className="text-xs opacity-80">
             <summary className="cursor-pointer select-none">{m.home_s2_docker({}, { locale })}</summary>
             <div className="mt-2 flex items-start gap-2 rounded-xl bg-feed p-4 text-feed-foreground">
-              <pre className="overflow-x-auto font-ticker text-xs leading-relaxed">{dockerCmd}</pre>
+              <pre className="overflow-x-auto font-ticker text-xs leading-relaxed break-all whitespace-pre-wrap sm:whitespace-pre">{dockerCmd}</pre>
               <CopyButton text={dockerCmd} label={copyLabel} />
             </div>
           </details>

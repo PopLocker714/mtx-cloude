@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { MailCheck } from "lucide-react";
 import { m } from "@/paraglide/messages";
 import { useAppLocale } from "@/lib/app-locale";
+import { useAuthConfig } from "@/lib/auth-config";
 import { stubSendCode, stubVerifyEmail } from "@/lib/api";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,8 @@ export const Route = createFileRoute("/verify-email")({
 
 function VerifyEmail() {
   const [locale] = useAppLocale();
+  const { email: mailLive } = useAuthConfig();
+  const [delivery, setDelivery] = useState<"email" | "log" | "failed" | null>(null);
   const { email } = Route.useSearch();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +26,7 @@ function VerifyEmail() {
 
   // Код выдаётся при заходе на страницу (доставка — лог бэкенда, пока нет писем).
   useEffect(() => {
-    if (email) stubSendCode(email, "verify-email").catch(() => {});
+    if (email) stubSendCode(email, "verify-email").then((r) => setDelivery(r.delivery)).catch(() => {});
   }, [email]);
 
   async function submit(e: React.FormEvent) {
@@ -42,7 +45,7 @@ function VerifyEmail() {
   async function resend() {
     setError(null);
     setCode("");
-    await stubSendCode(email, "verify-email").catch(() => {});
+    await stubSendCode(email, "verify-email").then((r) => setDelivery(r.delivery)).catch(() => {});
     setResent(true);
     setTimeout(() => setResent(false), 3000);
   }
@@ -87,7 +90,11 @@ function VerifyEmail() {
         </button>
 
         <p className="rounded-2xl bg-muted p-4 text-xs leading-relaxed text-muted-foreground">
-          {m.fp_stub({}, { locale })}
+          {delivery === "failed"
+            ? m.fp_failed({}, { locale })
+            : (delivery === "email" || (delivery === null && mailLive))
+              ? m.fp_sent({}, { locale })
+              : m.fp_stub({}, { locale })}
         </p>
       </div>
     </AuthShell>

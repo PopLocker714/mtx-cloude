@@ -3,6 +3,7 @@ import { useState } from "react";
 import { LockKeyhole, Check } from "lucide-react";
 import { m } from "@/paraglide/messages";
 import { useAppLocale } from "@/lib/app-locale";
+import { useAuthConfig } from "@/lib/auth-config";
 import { stubResetPassword } from "@/lib/api";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/reset-password")({
 
 function ResetPassword() {
   const [locale] = useAppLocale();
+  const { email: mailLive } = useAuthConfig();
   const { email } = Route.useSearch();
   const navigate = useNavigate();
   const [code, setCode] = useState("");
@@ -94,7 +96,7 @@ function ResetPassword() {
         )}
 
         <p className="rounded-2xl bg-muted p-4 text-xs leading-relaxed text-muted-foreground">
-          {m.fp_stub({}, { locale })}
+          {mailLive ? m.fp_sent({}, { locale }) : m.fp_stub({}, { locale })}
         </p>
       </div>
     </AuthShell>

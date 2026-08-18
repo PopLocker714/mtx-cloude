@@ -368,5 +368,9 @@
   "ve_resend": "Send the code again",
   "ve_resent": "Code sent again",
   "fp_have_code": "Already have a code?",
-  "fp_enter_code": "Enter the code"
+  "fp_enter_code": "Enter the code",
+  "auth_social_soon": "coming soon",
+  "auth_social_hint": "Social sign-in is coming soon. For now use your email.",
+  "fp_sent": "The code was emailed to you. It is valid for 15 minutes.",
+  "fp_failed": "The email could not be sent — the mail service rejected it. Tell the administrator; the code is in the server log."
 }

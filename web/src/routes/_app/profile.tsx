@@ -100,7 +100,8 @@ function AppearanceCard() {
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label>{m.prof_theme({}, { locale })}</Label>
-          <div className="flex gap-2">
+          {/* Три кнопки темы не влезают в ряд на телефоне — переносим. */}
+          <div className="flex flex-wrap gap-2">
             {modes.map((mo) => (
               <Button
                 key={mo.key}

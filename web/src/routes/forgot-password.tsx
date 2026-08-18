@@ -3,6 +3,7 @@ import { useState } from "react";
 import { KeyRound } from "lucide-react";
 import { m } from "@/paraglide/messages";
 import { useAppLocale } from "@/lib/app-locale";
+import { useAuthConfig } from "@/lib/auth-config";
 import { stubSendCode } from "@/lib/api";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,8 @@ export const Route = createFileRoute("/forgot-password")({ component: ForgotPass
 
 function ForgotPassword() {
   const [locale] = useAppLocale();
+  const { email: mailLive } = useAuthConfig();
+  const [delivery, setDelivery] = useState<"email" | "log" | "failed" | null>(null);
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,7 +26,7 @@ function ForgotPassword() {
     setError(null);
     setLoading(true);
     try {
-      await stubSendCode(email, "reset-password"); // письма нет — код уходит в лог бэкенда
+      setDelivery((await stubSendCode(email, "reset-password")).delivery);
       navigate({ to: "/reset-password", search: { email } });
     } catch (err) {
       setError((err as Error).message);
@@ -74,7 +77,11 @@ function ForgotPassword() {
         </p>
 
         <p className="rounded-2xl bg-muted p-4 text-xs leading-relaxed text-muted-foreground">
-          {m.fp_stub({}, { locale })}
+          {delivery === "failed"
+            ? m.fp_failed({}, { locale })
+            : (delivery === "email" || (delivery === null && mailLive))
+              ? m.fp_sent({}, { locale })
+              : m.fp_stub({}, { locale })}
         </p>
       </div>
     </AuthShell>
